@@ -16,9 +16,9 @@ export default async function Collection({params}) {
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
     var tractEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, dataIdList]) =>  {
-        dataIdList.forEach((dataIdString) => {
-            const tract = JSON.parse(dataIdString)['tract']
+    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
+        plotIdList.forEach((listEntry) => {
+            const tract = JSON.parse(listEntry['dataId'])['tract']
             if(tractEntries[tract]) {
                 tractEntries[tract] = 1 + tractEntries[tract]
             } else {
@@ -31,9 +31,9 @@ export default async function Collection({params}) {
     const tractKeys = tractInts.map(x => x.toString())
 
     var plotEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, dataIdList]) =>  {
+    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
 
-        dataIdList.forEach((dataIdString) => {
+        plotIdList.forEach((listEntry) => {
             if(plotEntries[plot]) {
                 plotEntries[plot] = 1 + plotEntries[plot]
             } else {

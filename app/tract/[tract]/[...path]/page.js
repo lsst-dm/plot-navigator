@@ -17,15 +17,16 @@ export default async function Collection({params}) {
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
     var plotEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, dataIdList]) =>  {
+    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
 
-        dataIdList.forEach((dataIdString) => {
-            const thisTract = JSON.parse(dataIdString)['tract']
+        plotIdList.forEach((plotEntry) => {
+            const dataId = JSON.parse(plotEntry['dataId'])
+            const thisTract = dataId['tract']
             if(thisTract == tract) {
                 if(plotEntries[plot]) {
-                    plotEntries[plot] = [JSON.parse(dataIdString), ...plotEntries[plot]]
+                    plotEntries[plot] = [dataId, ...plotEntries[plot]]
                 } else {
-                    plotEntries[plot] = [JSON.parse(dataIdString)]
+                    plotEntries[plot] = [dataId]
                 }
 
             }

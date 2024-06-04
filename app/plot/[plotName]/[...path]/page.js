@@ -24,9 +24,9 @@ export default async function Collection({params}) {
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">{plotName}</div>
             <div className="">
-                {plotEntries.map((dataId, n) => 
+                {plotEntries.map((plotEntry, n) =>
                     <div key={n} className="w-96 p-5 m-5 float-left">
-                        <div className="text-1xl my-5">{dataId}</div>
+                        <div className="text-1xl my-5">{plotEntry.dataId}</div>
                         <img src="/test_plot.png" />
                     </div>
                 )}
