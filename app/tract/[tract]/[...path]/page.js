@@ -11,18 +11,23 @@ export default async function Collection({params}) {
 
 
     const collection = params['path'].join("/")
+    const tract = params['tract']
 
     const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
-    var tractEntries = {}
+    var plotEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, dataIdList]) =>  {
+
         dataIdList.forEach((dataIdString) => {
-            const tract = JSON.parse(dataIdString)['tract']
-            if(tractEntries[tract]) {
-                tractEntries[tract] = 1 + tractEntries[tract]
-            } else {
-                tractEntries[tract] = 1
+            const thisTract = JSON.parse(dataIdString)['tract']
+            if(thisTract == tract) {
+                if(plotEntries[plot]) {
+                    plotEntries[plot] = [JSON.parse(dataIdString), ...plotEntries[plot]]
+                } else {
+                    plotEntries[plot] = [JSON.parse(dataIdString)]
+                }
+
             }
         })
     })
@@ -33,21 +38,16 @@ export default async function Collection({params}) {
 
     return (
         <div>
-            <div className="text-m m-5"><a href="/collections">&lt;- Back to collections</a></div>
+            <div className="text-m m-5"><a href={`/collection/${collection}`}>&lt;- Back to collection</a></div>
             <div className="text-2xl m-5">{collection}</div>
-            <div className="border-2 rounded m-4 p-4 w-48">
-                <table className="divide-y">
-                <thead>
-                    <tr><td>Tract</td><td>Plot count</td></tr>
-                </thead>
-                <tbody>
-                {Object.entries(tractEntries).map(([tract, count], n) => 
-                    <tr key={n}>
-                    <td className="p-1"><a href={`/tract/${tract}/${collection}`}>{tract}</a></td>
-                    <td className="p-1 text-right">{count}</td></tr>
+            <div className="text-2xl m-5">Tract {tract}</div>
+            <div className="">
+                {Object.entries(plotEntries).map(([plot, dataIds], n) => 
+                    <div key={n} className="w-96 p-5 m-5 float-left">
+                        <div className="text-1xl my-5">{plot}</div>
+                        <img src="/test_plot.png" />
+                    </div>
                 )}
-                </tbody>
-                </table>
             </div>
         </div>
     )
