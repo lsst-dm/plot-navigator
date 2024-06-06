@@ -6,17 +6,26 @@ const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
+import PlotPager from '../../../plotPager'
 
-export default async function Collection({params}) {
+export default async function Collection({params, searchParams}) {
 
 
     const collection = params['path'].join("/")
     const plotName = params['plotName']
 
+    const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
+    console.log(searchParams)
+
     const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
     const plotEntries = collectionData['tracts']?.[plotName] ?? []
+    /* https://usdf-rsp-dev.slac.stanford.edu/api/butler/repo/embargo/v1/get_file/5bc72dcd-cc33-43b0-a280-7f3cebbc8546
+     *
+     * artifact.file_info.0.url
+     */
+
 
     return (
         <div>
@@ -24,12 +33,7 @@ export default async function Collection({params}) {
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">{plotName}</div>
             <div className="">
-                {plotEntries.map((plotEntry, n) =>
-                    <div key={n} className="w-96 p-5 m-5 float-left">
-                        <div className="text-1xl my-5">{plotEntry.dataId}</div>
-                        <img src="/test_plot.png" />
-                    </div>
-                )}
+                <PlotPager plotEntries={plotEntries} currentPage={currentPage}/>
             </div>
         </div>
     )
