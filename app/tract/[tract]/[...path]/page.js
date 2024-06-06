@@ -6,12 +6,16 @@ const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
+import PlotPager from '../../../plotPager'
 
-export default async function Collection({params}) {
+
+export default async function Collection({params, searchParams}) {
 
 
     const collection = params['path'].join("/")
     const tract = params['tract']
+
+    const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
 
     const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
@@ -24,18 +28,25 @@ export default async function Collection({params}) {
             const thisTract = dataId['tract']
             if(thisTract == tract) {
                 if(plotEntries[plot]) {
-                    plotEntries[plot] = [dataId, ...plotEntries[plot]]
+                    plotEntries[plot] = [plotEntry, ...plotEntries[plot]]
                 } else {
-                    plotEntries[plot] = [dataId]
+                    plotEntries[plot] = [plotEntry]
                 }
 
             }
         })
     })
 
+    const plotGroupSet = new Set(Object.keys(plotEntries).map(plotName => plotName.split('_')[0]))
+    const plotGroups = Array(...plotGroupSet)
+    plotGroups.sort()
 
-    /* {"tracts": {"objectTableCore_xPerpPSFP_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_yPerpPSF_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_yPerpCModel_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_i_e1Diff_ScatterPlotWithTwoHists": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_wPerpCModel_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract:
-     */
+    const findMatchingPlots = (plotEntries, prefix) => {
+        const matchingNames = Object.keys(plotEntries).filter((plotName) => plotName.split('_')[0] == prefix)
+        matchingNames.sort()
+
+        return matchingNames.map(name => plotEntries[name]).flat()
+    }
 
     return (
         <div>
@@ -43,10 +54,11 @@ export default async function Collection({params}) {
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>
             <div className="">
-                {Object.entries(plotEntries).map(([plot, dataIds], n) => 
-                    <div key={n} className="w-96 p-5 m-5 float-left">
-                        <div className="text-1xl my-5">{plot}</div>
-                        <img src="/test_plot.png" />
+                {plotGroups.map( (plotGroup, n) => 
+                    <div key={n}>
+                        <div className="m-8 text-xl border-b-2 border-black">{plotGroup}_*</div>
+                    <PlotPager plotEntries={findMatchingPlots(plotEntries, plotGroup)} currentPage={1} showDataId={false} plotsPerPage={6}/>
+                        <div className="clear-both"></div>
                     </div>
                 )}
             </div>

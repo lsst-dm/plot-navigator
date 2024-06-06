@@ -1,25 +1,28 @@
 
 import React from 'react';
 
-export default async function PlotDisplay({plotEntry}) {
+export default async function PlotDisplay({plotEntry, showDataId = true}) {
 
     const dataId = plotEntry.dataId
     const uuid = plotEntry.id
 
     async function getUrl(uuid) {
         const url = `http://127.0.0.1:5678/api/butler/repo/embargo/v1/get_file/${uuid}`
-        console.log("Trying: " + url)
-        const result = await fetch(url)
+        const result = await fetch(url, { next: { revalidate: 180 } })
 
         if (!result.ok) {
-            const returnval = await result.json()
-            console.log("Fetch failed, " + JSON.stringify(returnval))
-            return ""
+            try {
+                const returnval = await result.json()
+                console.log("Fetch failed, " + JSON.stringify(returnval))
+                return ""
+            } catch (error) {
+                console.log(`Fetch failed of url ${url}, error ` + error)
+                return ""
+            }
         }
 
         const datasetInfo = await result.json()
 
-        /* console.log(datasetInfo.artifact.file_info[0].url)*/
         if(datasetInfo.artifact.file_info.length != 1) {
             console.log(`Multiple file_info entries returned for url ${url}`)
             return ""
@@ -31,8 +34,7 @@ export default async function PlotDisplay({plotEntry}) {
 
     return (
         <div className="w-96 p-5 m-5 float-left">
-            <div className="text-1xl my-5">{dataId}</div>
-            { /* <img src="/test_plot.png" /> */ }
+            { showDataId ? <div className="text-1xl my-5">{dataId}</div> : "" }
             <a href={await getUrl(uuid)}><img src={await getUrl(uuid)} /></a>
         </div>
 

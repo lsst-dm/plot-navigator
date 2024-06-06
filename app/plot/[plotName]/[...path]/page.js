@@ -15,17 +15,11 @@ export default async function Collection({params, searchParams}) {
     const plotName = params['plotName']
 
     const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
-    console.log(searchParams)
 
     const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
     const plotEntries = collectionData['tracts']?.[plotName] ?? []
-    /* https://usdf-rsp-dev.slac.stanford.edu/api/butler/repo/embargo/v1/get_file/5bc72dcd-cc33-43b0-a280-7f3cebbc8546
-     *
-     * artifact.file_info.0.url
-     */
-
 
     return (
         <div>

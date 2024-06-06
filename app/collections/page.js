@@ -31,8 +31,8 @@ export default function Collections() {
                     </tr>
                 </thead>
                 <tbody>
-                    {collections.map((collection) => 
-                    (<tr><td className={cellClassNames}><a href={`/collection/${collection}`}>{collection}</a></td>
+                    {collections.map((collection, n) => 
+                    (<tr key={n}><td className={cellClassNames}><a href={`/collection/${collection}`}>{collection}</a></td>
                          <td className={cellClassNames}>4321</td>
                          <td className={`text-right ${cellClassNames}`}>2024-05-06</td>
                         </tr>))}

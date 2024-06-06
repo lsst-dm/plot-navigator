@@ -4,11 +4,11 @@ import Link from 'next/link'
 
 import PlotDisplay from './plotDisplay'
 
-export default async function PlotPager({plotEntries, currentPage}) {
+export default async function PlotPager({plotEntries, currentPage, showDataId = true, plotsPerPage = 10}) {
 
 
-    const plotsPerPage = 5
     const totalPages = Math.ceil(plotEntries.length/plotsPerPage)
+
 
     return (
         <div>
@@ -24,7 +24,7 @@ export default async function PlotPager({plotEntries, currentPage}) {
                     </div>
             </div>
             {plotEntries.slice((currentPage - 1) * plotsPerPage, currentPage * plotsPerPage).map((plotEntry, n) =>
-                <PlotDisplay plotEntry={plotEntry} key={n} />
+                <PlotDisplay plotEntry={plotEntry} key={n} showDataId={showDataId}/>
             )}
         </div>
     )
