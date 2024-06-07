@@ -10,8 +10,13 @@ export default function Collections() {
     }
 
     const dataDir = 'data/'
-    const filenames = fs.readdirSync(dataDir).filter(
-        (filename) => filename.match("collection_(.*).json.gz"));
+    const filenames = (() => {
+        try {
+            return fs.readdirSync(dataDir).filter(
+                (filename) => filename.match("collection_(.*).json.gz"));
+        } catch (error) {
+            return []
+        }})()
     const collections = filenames.map(decodeFilename)
 
 

@@ -22,7 +22,7 @@ export default async function Collection({params, searchParams}) {
 
     const plotEntries = collectionData['tracts']?.[plotName] ?? []
 
-    const plotDisplays = plotEntries.map(entry => (<PlotDisplay plotEntry={entry} />))
+    const plotDisplays = plotEntries.map((entry, n) => (<PlotDisplay key={n} plotEntry={entry} />))
 
     return (
         <div>
