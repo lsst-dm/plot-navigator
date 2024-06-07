@@ -45,7 +45,6 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v5
         with:
-          context: src
           push: true
           tags: ghcr.io/lsst-dm/plot-navigator:${{ env.IMG_TAG }}
           cache-from: type=gha
