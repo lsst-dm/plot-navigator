@@ -7,6 +7,7 @@ const zlib = require('zlib');
 const  { readFile } = require("fs/promises")
 
 import PlotPager from '../../../plotPager'
+import PlotDisplay from '../../../plotDisplay'
 
 
 export default async function Collection({params, searchParams}) {
@@ -48,16 +49,18 @@ export default async function Collection({params, searchParams}) {
         return matchingNames.map(name => plotEntries[name]).flat()
     }
 
+
     return (
         <div>
             <div className="text-m m-5"><a href={`/collection/${collection}`}>&lt;- Back to collection</a></div>
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>
             <div className="">
-                {plotGroups.map( (plotGroup, n) => 
+                {plotGroups.map( (plotGroup, n) =>
                     <div key={n}>
-                        <div className="m-8 text-xl border-b-2 border-black">{plotGroup}_*</div>
-                    <PlotPager plotEntries={findMatchingPlots(plotEntries, plotGroup)} currentPage={1} showDataId={false} plotsPerPage={6}/>
+                        <div className="m-8 text-xl font-medium border-b-2 border-black">{plotGroup}_*</div>
+                    <PlotPager plotEntries={findMatchingPlots(plotEntries, plotGroup).map(entry => 
+                            <PlotDisplay plotEntry={entry} showDataId={false} />)} plotsPerPage={6} />
                         <div className="clear-both"></div>
                     </div>
                 )}

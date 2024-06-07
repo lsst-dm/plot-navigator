@@ -1,30 +1,44 @@
 
+'use client'
+
 import React from 'react';
-import Link from 'next/link'
+import { useState } from 'react'
 
-import PlotDisplay from './plotDisplay'
+export default function PlotPager({plotEntries, plotsPerPage = 10}) {
 
-export default async function PlotPager({plotEntries, currentPage, showDataId = true, plotsPerPage = 10}) {
 
+    const [currentPage, setCurrentPage] = useState(1)
 
     const totalPages = Math.ceil(plotEntries.length/plotsPerPage)
 
+
+    const previousPage = () => {
+        if(currentPage > 1) {
+            setCurrentPage(currentPage - 1)
+        }
+    }
+
+    const nextPage = () => {
+        if(currentPage < totalPages) {
+            setCurrentPage(currentPage + 1)
+        }
+    }
 
     return (
         <div>
             <div className="flex flex-row justify-center">
                 <div className="m-3">
-                    { currentPage > 1 ? <Link href={`?page=${currentPage - 1}`} className="p-2 rounded-md text-white bg-sky-600">Prev</Link> :
+                    { currentPage > 1 ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={previousPage}>Prev</button> :
                         <div>Prev</div> }
                     </div>
                 <div className="m-3">Page {currentPage}/{totalPages}</div>
                 <div className="m-3">
-                    { currentPage < totalPages ? <Link href={`?page=${currentPage + 1}`} className="p-2 rounded-md text-white bg-sky-600">Next</Link> :
+                    { currentPage < totalPages ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={nextPage}>Next</button> :
                         <div>Next</div> }
                     </div>
             </div>
             {plotEntries.slice((currentPage - 1) * plotsPerPage, currentPage * plotsPerPage).map((plotEntry, n) =>
-                <PlotDisplay plotEntry={plotEntry} key={n} showDataId={showDataId}/>
+                plotEntry
             )}
         </div>
     )
