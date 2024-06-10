@@ -12,6 +12,15 @@ import PlotDisplay from '../../../plotDisplay'
 export default async function Collection({params, searchParams}) {
 
 
+    const findPlotEntries = (collection, plotName)  => {
+
+        const tractEntries = collectionData['tracts']?.[plotName] ?? []
+        const visitEntries = collectionData['visit']?.[plotName] ?? []
+        const globalEntries = collectionData['global']?.[plotName] ?? []
+
+        return [tractEntries, visitEntries, globalEntries].flat()
+    }
+
     const collection = params['path'].join("/")
     const plotName = params['plotName']
 
@@ -20,7 +29,7 @@ export default async function Collection({params, searchParams}) {
     const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
     const collectionData = JSON.parse(zlib.gunzipSync(gzData))
 
-    const plotEntries = collectionData['tracts']?.[plotName] ?? []
+    const plotEntries = findPlotEntries(collectionData, plotName)
 
     const plotDisplays = plotEntries.map((entry, n) => (<PlotDisplay key={n} plotEntry={entry} />))
 
