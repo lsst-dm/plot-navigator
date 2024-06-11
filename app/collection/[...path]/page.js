@@ -31,14 +31,28 @@ export default async function Collection({params}) {
     tractInts.sort((a,b) => a - b)
     const tractKeys = tractInts.map(x => x.toString())
 
+    const classifyDataId = (dataId) => {
+        if('tract' in dataId) {
+            return 'tract'
+        } else if('visit' in dataId) {
+            return 'visit'
+        } else {
+            return 'global'
+        }
+    }
+
     var plotEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
+    const allCollectionEntries = [...Object.entries(collectionData['tracts']),
+        ...Object.entries(collectionData['visits']),
+        ...Object.entries(collectionData['global'])]
+    allCollectionEntries.forEach(([plot, plotIdList]) =>  {
 
         plotIdList.forEach((listEntry) => {
-            if(plotEntries[plot]) {
-                plotEntries[plot] = 1 + plotEntries[plot]
+            const entry = plotEntries[plot]
+            if(entry) {
+                plotEntries[plot] = {count: entry['count'] + 1, ...entry}
             } else {
-                plotEntries[plot] = 1
+                plotEntries[plot] = {category: classifyDataId(listEntry), count: 1}
             }
 
         })
@@ -80,16 +94,13 @@ export default async function Collection({params}) {
     globalKeys.sort()
 
 
-    /* {"tracts": {"objectTableCore_xPerpPSFP_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_yPerpPSF_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_yPerpCModel_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_i_e1Diff_ScatterPlotWithTwoHists": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract: 9813}"], "objectTableCore_wPerpCModel_ColorColorFitPlot": ["{skymap: 'hsc_rings_v1', tract: 9615}", "{skymap: 'hsc_rings_v1', tract: 9697}", "{skymap: 'hsc_rings_v1', tract:
-     */
-
     return (
         <div>
             <div className="text-m m-5"><a href="/collections">&lt;- Back to collections</a></div>
             <div className="text-2xl m-5">{collection}</div>
 
             <div className="">
-                <SelectionDropdown title="Tract Plots"
+                <SelectionDropdown title="By Data ID"
                 contents={
                     <div className="py-4">
                         <div className="border-2 rounded mr-4 p-4 w-48 float-left">
@@ -107,25 +118,6 @@ export default async function Collection({params}) {
                             </table>
                         </div>
 
-                        <div className="border-2 rounded mr-2 p-4 float-left">
-                            <table className="divide-y">
-                            <thead>
-                                <tr><td>Per-Tract Plots</td><td>Plot count</td></tr>
-                            </thead>
-                            <tbody>
-                            {plotKeys.map((plot, n) =>
-                                <tr key={n}>
-                                <td className="p-1"><a href={`/plot/${plot}/${collection}`}>{plot}</a></td>
-                                <td className="p-1 text-right">{plotEntries[plot]}</td></tr>
-                            )}
-                            </tbody>
-                            </table>
-                        </div>
-                    </div>} />
-
-                <SelectionDropdown title="Visit Plots"
-                contents={
-                    <div className="py-4">
                         <div className="border-2 rounded mr-4 p-4 w-48 float-left">
                             <table className="divide-y">
                             <thead>
@@ -143,28 +135,26 @@ export default async function Collection({params}) {
 
                     </div>} />
 
-
-
-
-                <SelectionDropdown title="Global Plots"
+                <SelectionDropdown title="By Plot Type"
                 contents={
                     <div className="py-4">
-
                         <div className="border-2 rounded mr-2 p-4 float-left">
                             <table className="divide-y">
                             <thead>
-                                <tr><td>Global Plots</td><td>Plot count</td></tr>
+                                <tr><td>Plot Type</td><td>Plot count</td></tr>
                             </thead>
                             <tbody>
-                            {globalKeys.map((plot, n) =>
+                            {plotKeys.map((plot, n) =>
                                 <tr key={n}>
                                 <td className="p-1"><a href={`/plot/${plot}/${collection}`}>{plot}</a></td>
-                                <td className="p-1 text-right">{globalEntries[plot]}</td></tr>
+                                <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
                             )}
                             </tbody>
                             </table>
                         </div>
+
                     </div>} />
+
 
             </div>
 
