@@ -1,8 +1,10 @@
 
 
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3"
+
 const fs = require('fs');
 
-export default function Collections() {
+export default async function Collections() {
 
     const decodeFilename = (filename) => {
         const uriEncodedCollection = filename.match("collection_(.*).json.gz")[1]
@@ -10,12 +12,49 @@ export default function Collections() {
     }
 
     const dataDir = 'data/'
-    const filenames = (() => {
-        try {
-            return fs.readdirSync(dataDir).filter(
-                (filename) => filename.match("collection_(.*).json.gz"));
-        } catch (error) {
-            return []
+    const filenames = await (async () => {
+        if(process.env.BUCKET_NAME) {
+
+            const client = new S3Client({
+                endpoint: process.env.BUCKET_URL,
+                region: "s3dfrgw",
+                forcePathStyle: true,
+                credentials: {
+                    accessKeyId: process.env.S3_KEY,
+                    secretAccessKey: process.env.S3_SECRET,
+                },
+            })
+            const command = new ListObjectsV2Command({
+                Bucket: process.env.BUCKET_NAME,
+                Prefix: "embargo/"
+            });
+
+            try {
+                let isTruncated = true;
+
+                let filenameArrays = []
+
+                while (isTruncated) {
+                    const { Contents, IsTruncated, NextContinuationToken } =
+                        await client.send(command)
+                    filenameArrays.push(Contents.map((entry) => entry.Key))
+                    isTruncated = IsTruncated
+                    command.input.ContinuationToken = NextContinuationToken
+                }
+                return filenameArrays.flat()
+            } catch (err) {
+                console.log(err)
+                return []
+            }
+
+
+        } else {
+            try {
+                return fs.readdirSync(dataDir).filter(
+                    (filename) => filename.match("collection_(.*).json.gz"));
+            } catch (error) {
+                return []
+            }
         }})()
     const collections = filenames.map(decodeFilename)
 
