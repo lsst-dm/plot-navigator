@@ -1,10 +1,7 @@
 
 import React from 'react';
 
-const fs = require('fs');
-const zlib = require('zlib');
-
-const  { readFile } = require("fs/promises")
+import { GetSummary } from '../../../summaries'
 
 import PlotPager from '../../../plotPager'
 import PlotDisplay from '../../../plotDisplay'
@@ -17,9 +14,7 @@ export default async function Collection({params, searchParams}) {
     const tract = params['tract']
 
     const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
-
-    const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
-    const collectionData = JSON.parse(zlib.gunzipSync(gzData))
+    const collectionData = await GetSummary("embargo", collection)
 
     var plotEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {

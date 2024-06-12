@@ -1,20 +1,15 @@
 
 import React from 'react';
 
-const fs = require('fs');
-const zlib = require('zlib');
-
-const  { readFile } = require("fs/promises")
-
 import SelectionDropdown from '../../selectionDropdown'
+import { GetSummary } from '../../summaries'
 
 export default async function Collection({params}) {
 
 
     const collection = params['path'].join("/")
 
-    const gzData = await readFile(`data/collection_${encodeURIComponent(collection)}.json.gz`)
-    const collectionData = JSON.parse(zlib.gunzipSync(gzData))
+    const collectionData = await GetSummary("embargo", collection)
 
     var tractEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
@@ -47,15 +42,7 @@ export default async function Collection({params}) {
         ...Object.entries(collectionData['global'])]
     allCollectionEntries.forEach(([plot, plotIdList]) =>  {
 
-        plotIdList.forEach((listEntry) => {
-            const entry = plotEntries[plot]
-            if(entry) {
-                plotEntries[plot] = {count: entry['count'] + 1, ...entry}
-            } else {
-                plotEntries[plot] = {category: classifyDataId(listEntry), count: 1}
-            }
-
-        })
+        plotEntries[plot] = {category: classifyDataId(plotIdList[0]), count: plotIdList.length}
     })
 
     const plotKeys = Object.keys(plotEntries)
@@ -65,11 +52,7 @@ export default async function Collection({params}) {
     Object.entries(collectionData['visits']).forEach(([plot, plotIdList]) =>  {
         plotIdList.forEach((listEntry) => {
             const visit = JSON.parse(listEntry['dataId'])['visit']
-            if(visitEntries[visit]) {
-               visitEntries[visit] = 1 + visitEntries[visit]
-            } else {
-               visitEntries[visit] = 1
-            }
+            visitEntries[visit] = visitEntries[visit] ?  visitEntries[visit] + 1 : 1
         })
     })
     const visitInts = Object.keys(visitEntries).map(x => parseInt(x))
@@ -96,7 +79,7 @@ export default async function Collection({params}) {
 
     return (
         <div>
-            <div className="text-m m-5"><a href="/collections">&lt;- Back to collections</a></div>
+            <div className="text-m m-5"><a href={process.env.BASE_URL ? process.env.BASE_URL : "/"  }>&lt;- Back to collections</a></div>
             <div className="text-2xl m-5">{collection}</div>
 
             <div className="">

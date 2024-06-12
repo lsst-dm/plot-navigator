@@ -1,20 +1,51 @@
 
 
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3"
+import { S3Client, ListObjectsV2Command, GetObjectCommand} from "@aws-sdk/client-s3"
 
 const fs = require('fs');
 const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
-function _GetSummaryS3(repoName, collectionName) {
+function _getClient() {
+
+    const client = new S3Client({
+        endpoint: process.env.BUCKET_URL,
+        region: "s3dfrgw",
+        forcePathStyle: true,
+        credentials: {
+            accessKeyId: process.env.S3_KEY,
+            secretAccessKey: process.env.S3_SECRET,
+        },
+    })
+    return client
+}
+
+async function _GetSummaryS3(repoName, collectionName) {
+
+    const client = _getClient()
+    const command = new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: `${repoName}/collection_${encodeURIComponent(collectionName)}.json.gz`
+    })
+
+    try {
+        const response = await client.send(command)
+        const gzData = await response.Body.transformToByteArray()
+        const collectionData = JSON.parse(zlib.gunzipSync(gzData))
+        return collectionData
+
+    } catch (err) {
+        console.error(err)
+        return {}
+    }
 
 }
 
 async function GetSummary(repoName, collectionName) {
 
     if(process.env.BUCKET_NAME) {
-        return _GetSummaryS3(repo, collectionName)
+        return await _GetSummaryS3(repoName, collectionName)
 
     } else {
         const gzData = await readFile(`data/${repoName}/collection_${encodeURIComponent(collectionName)}.json.gz`)
@@ -26,15 +57,7 @@ async function GetSummary(repoName, collectionName) {
 
 async function _ListSummariesS3(repoName) {
 
-    const client = new S3Client({
-        endpoint: process.env.BUCKET_URL,
-        region: "s3dfrgw",
-        forcePathStyle: true,
-        credentials: {
-            accessKeyId: process.env.S3_KEY,
-            secretAccessKey: process.env.S3_SECRET,
-        },
-    })
+    const client = _getClient()
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
         Prefix: `${repoName}/`
@@ -84,4 +107,54 @@ async function ListSummaries() {
 
 }
 
-export {ListSummaries, GetSummary}
+async function ListReports() {
+
+    const client = _getClient()
+
+    const command = new ListObjectsV2Command({
+        Bucket: process.env.BUCKET_NAME,
+        Prefix: `reports/`
+    });
+
+    try {
+        let isTruncated = true;
+
+        let filenameArrays = []
+
+        while (isTruncated) {
+            const { Contents, IsTruncated, NextContinuationToken } =
+                await client.send(command)
+            filenameArrays.push(Contents.map((entry) => entry.Key))
+            isTruncated = IsTruncated
+            command.input.ContinuationToken = NextContinuationToken
+        }
+        return filenameArrays.flat()
+    } catch (err) {
+        console.log(err)
+        return []
+    }
+
+}
+
+async function GetReport(filename) {
+
+    const client = _getClient()
+    const command = new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: `reports/${filename}`
+    })
+
+    try {
+        const response = await client.send(command)
+        const gzData = await response.Body.transformToByteArray()
+        const collectionData = JSON.parse(zlib.gunzipSync(gzData))
+        return collectionData
+
+    } catch (err) {
+        console.error(err)
+        return {}
+    }
+
+}
+
+export {ListSummaries, GetSummary, ListReports, GetReport}

@@ -7,7 +7,7 @@ export default async function PlotDisplay({plotEntry, showDataId = true}) {
     const uuid = plotEntry.id
 
     async function getUrl(uuid) {
-        const url = `http://127.0.0.1:5678/api/butler/repo/embargo/v1/get_file/${uuid}`
+        const url = `${process.env.BUTLER_URL}/api/butler/repo/embargo/v1/get_file/${uuid}`
         const result = await fetch(url, { next: { revalidate: 180 } })
 
         if (!result.ok) {
