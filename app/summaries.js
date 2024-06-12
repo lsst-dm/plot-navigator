@@ -71,7 +71,9 @@ async function _ListSummariesS3(repoName) {
         while (isTruncated) {
             const { Contents, IsTruncated, NextContinuationToken } =
                 await client.send(command)
-            filenameArrays.push(Contents.map((entry) => entry.Key))
+            if(Contents) {
+                filenameArrays.push(Contents.map((entry) => entry.Key))
+            }
             isTruncated = IsTruncated
             command.input.ContinuationToken = NextContinuationToken
         }
@@ -124,7 +126,9 @@ async function ListReports() {
         while (isTruncated) {
             const { Contents, IsTruncated, NextContinuationToken } =
                 await client.send(command)
-            filenameArrays.push(Contents.map((entry) => entry.Key))
+            if(Contents) {
+                filenameArrays.push(Contents.map((entry) => entry.Key))
+            }
             isTruncated = IsTruncated
             command.input.ContinuationToken = NextContinuationToken
         }
