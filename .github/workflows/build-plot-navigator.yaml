@@ -19,7 +19,7 @@ jobs:
     steps:
 
       - name: Get tag name
-        run: echo "IMG_TAG=${GITHUB_REF##(refs/*/|refs/heads/tickets/)}" >> $GITHUB_ENV
+        run: echo "IMG_TAG=${GITHUB_REF_NAME#tickets/}" >> $GITHUB_ENV
 
       -
         name: Set up QEMU
