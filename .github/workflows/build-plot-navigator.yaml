@@ -4,18 +4,22 @@ on:
   push:
     tags:
       - "*"
+    branches:
+      - "tickets/**"
+
 
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     if: >
-      startsWith(github.ref, 'refs/tags/')
+      startsWith(github.ref, 'refs/tags/') ||
+      startsWith(github.ref, 'refs/heads/tickets/')
 
     steps:
 
       - name: Get tag name
-        run: echo "IMG_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        run: echo "IMG_TAG=${GITHUB_REF##(refs/*/|refs/heads/tickets/)}" >> $GITHUB_ENV
 
       -
         name: Set up QEMU
