@@ -97,7 +97,7 @@ async function _ListSummariesFilesystem(repoName) {
 
 async function ListSummaries() {
 
-    const repos = process.env.REPOS.split(',')
+    const repos = process.env.REPOS ? process.env.REPOS.split(',') : []
 
     if(process.env.BUCKET_NAME) {
         const res = await Promise.all(repos.map(repo => _ListSummariesS3(repo)))
