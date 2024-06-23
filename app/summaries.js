@@ -18,6 +18,8 @@ function _getClient() {
             secretAccessKey: process.env.S3_SECRET,
         },
     })
+
+    console.log(`S3 key len ${process.env.S3_SECRET.length} ${process.env.S3_SECRET.length}`)
     return client
 }
 
