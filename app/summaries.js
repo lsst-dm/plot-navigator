@@ -19,7 +19,7 @@ function _getClient() {
         },
     })
 
-    console.log(`S3 key len ${process.env.S3_SECRET.length} ${process.env.S3_SECRET.length}`)
+    console.log(`S3 key len ${process.env.S3_SECRET ? process.env.S3_SECRET.length : -1} ${process.env.S3_SECRET ? process.env.S3_SECRET.length : -1}`)
     return client
 }
 
