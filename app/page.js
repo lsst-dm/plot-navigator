@@ -1,4 +1,5 @@
 
+import Link from 'next/link'
 
 import {ListSummaries, GetSummary, ListReports} from './summaries'
 
@@ -37,7 +38,7 @@ export default async function Collections() {
                 </thead>
                 <tbody>
                     {collections.map((collection, n) =>
-                    (<tr key={n}><td className={cellClassNames}><a href={`/collection/${collection}`}>{collection}</a></td>
+                    (<tr key={n}><td className={cellClassNames}><Link href={`/collection/${collection}`}>{collection}</Link></td>
                          <td className={cellClassNames}>4321</td>
                          <td className={`text-right ${cellClassNames}`}>2024-05-06</td>
                         </tr>))}
@@ -50,14 +51,14 @@ export default async function Collections() {
                 <table className="divide-y">
                 <thead>
                     <tr>
-                        <td className={cellClassNames}>Collection</td>
+                        <td className={cellClassNames}>Report</td>
                         <td className={cellClassNames}>Plots</td>
                         <td className={cellClassNames}>Last Updated</td>
                     </tr>
                 </thead>
                 <tbody>
                     {reports.map((collection, n) =>
-                    (<tr key={n}><td className={cellClassNames}><a href={`/collection/${collection}`}>{collection}</a></td>
+                    (<tr key={n}><td className={cellClassNames}><Link href={`/collection/${collection}`}>{collection}</Link></td>
                          <td className={cellClassNames}>4321</td>
                          <td className={`text-right ${cellClassNames}`}>2024-05-06</td>
                         </tr>))}

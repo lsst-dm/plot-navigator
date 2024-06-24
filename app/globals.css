@@ -16,6 +16,12 @@
   }
 }
 
+@layer base {
+    a {
+        @apply hover:underline;
+    }
+}
+
 /*
 body {
   color: rgb(var(--foreground-rgb));

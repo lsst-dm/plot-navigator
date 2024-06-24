@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Link from 'next/link'
 
 import { GetSummary } from '../../../summaries'
 
@@ -49,7 +50,7 @@ export default async function Collection({params, searchParams}) {
 
     return (
         <div>
-            <div className="text-m m-5"><a href={`/collection/${collection}`}>&lt;- Back to collection</a></div>
+            <div className="text-m m-5"><Link href={`/collection/${collection}`}>&lt;- Back to collection</Link></div>
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>
             <div className="">

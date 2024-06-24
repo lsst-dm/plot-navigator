@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Link from 'next/link'
 
 import SelectionDropdown from '../../selectionDropdown'
 import { GetSummary } from '../../summaries'
@@ -81,7 +82,7 @@ export default async function Collection({params}) {
 
     return (
         <div>
-            <div className="text-m m-5"><a href={process.env.BASE_URL ? process.env.BASE_URL : "/"  }>&lt;- Back to collections</a></div>
+            <div className="text-m m-5"><Link href={"/"}>&lt;- Back to collections</Link></div>
             <div className="text-2xl m-5">{collection}</div>
 
             <div className="">
@@ -96,7 +97,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {tractKeys.map((tract, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><a href={`/tract/${tract}/${collection}`}>{tract}</a></td>
+                                <td className="p-1"><Link href={`/tract/${tract}/${collection}`}>{tract}</Link></td>
                                 <td className="p-1 text-right">{tractEntries[tract]}</td></tr>
                             )}
                             </tbody>
@@ -111,7 +112,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {visitKeys.map((visit, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><a href={`/visit/${visit}/${collection}`}>{visit}</a></td>
+                                <td className="p-1"><Link href={`/visit/${visit}/${collection}`}>{visit}</Link></td>
                                 <td className="p-1 text-right">{visitEntries[visit]}</td></tr>
                             )}
                             </tbody>
@@ -131,7 +132,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {plotKeys.map((plot, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><a href={`/plot/${plot}/${collection}`}>{plot}</a></td>
+                                <td className="p-1"><Link href={`/plot/${plot}/${collection}`}>{plot}</Link></td>
                                 <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
                             )}
                             </tbody>
