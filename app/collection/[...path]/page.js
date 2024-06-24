@@ -4,6 +4,8 @@ import React from 'react';
 import SelectionDropdown from '../../selectionDropdown'
 import { GetSummary } from '../../summaries'
 
+export const revalidate = 180
+
 export default async function Collection({params}) {
 
 

@@ -6,6 +6,8 @@ import { GetSummary } from '../../../summaries'
 import PlotPager from '../../../plotPager'
 import PlotDisplay from '../../../plotDisplay'
 
+export const revalidate = 180
+
 export default async function Collection({params, searchParams}) {
 
 
