@@ -47,7 +47,6 @@ export default async function Collection({params, searchParams}) {
         return matchingNames.map(name => plotEntries[name]).flat()
     }
 
-
     return (
         <div>
             <div className="text-m m-5"><Link href={`/collection/${collection}`}>&lt;- Back to collection</Link></div>
@@ -57,8 +56,8 @@ export default async function Collection({params, searchParams}) {
                 {plotGroups.map( (plotGroup, n) =>
                     <div key={n}>
                         <div className="m-8 text-xl font-medium border-b-2 border-black">{plotGroup}_*</div>
-                    <PlotPager plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
-                            <PlotDisplay key={n} plotEntry={entry} showDataId={false} />)} plotsPerPage={6} />
+                    <PlotPager plotsPerPage={6} plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
+                            <PlotDisplay key={n} plotEntry={entry} showDataId={false} />)}  />
                         <div className="clear-both"></div>
                     </div>
                 )}

@@ -33,9 +33,9 @@ export default async function PlotDisplay({plotEntry, showDataId = true}) {
     }
 
     return (
-        <div className="w-96 p-5 m-5 float-left">
+        <div>
             { showDataId ? <div className="text-1xl my-5">{dataId}</div> : "" }
-            <a href={await getUrl(uuid)}><img src={await getUrl(uuid)} /></a>
+            <img src={await getUrl(uuid)} />
         </div>
 
     )
