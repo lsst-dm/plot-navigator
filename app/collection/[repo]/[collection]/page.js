@@ -2,17 +2,19 @@
 import React from 'react';
 import Link from 'next/link'
 
-import SelectionDropdown from '../../selectionDropdown'
-import { GetSummary } from '../../summaries'
+import SelectionDropdown from '../../../selectionDropdown'
+import { GetSummary } from '../../../summaries'
 
 export const revalidate = 180
 
 export default async function Collection({params}) {
 
 
-    const collection = params['path'].join("/")
+    const collection = decodeURIComponent(params['collection'])
+    const repo = decodeURIComponent(params['repo'])
 
-    const collectionData = await GetSummary("embargo", collection)
+    const collectionData = await GetSummary(repo, collection)
+    console.log(JSON.stringify(Object.keys(collectionData)))
 
     var tractEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
@@ -112,7 +114,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {visitKeys.map((visit, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><Link href={`/visit/${visit}/${collection}`}>{visit}</Link></td>
+                                <td className="p-1"><Link href={`/visit/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${visit}`}>{visit}</Link></td>
                                 <td className="p-1 text-right">{visitEntries[visit]}</td></tr>
                             )}
                             </tbody>
@@ -132,7 +134,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {plotKeys.map((plot, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><Link href={`/plot/${plot}/${collection}`}>{plot}</Link></td>
+                                <td className="p-1"><Link href={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
                                 <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
                             )}
                             </tbody>

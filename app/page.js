@@ -7,13 +7,10 @@ export const revalidate = 60
 
 export default async function Collections() {
 
-    const decodeFilename = (filename) => {
-        const uriEncodedCollection = filename.match("collection_(.*).json.gz")[1]
-        return decodeURIComponent(uriEncodedCollection)
-    }
-
-    const filenames = await ListSummaries()
-    const collections = filenames.map(decodeFilename)
+    /* SummaryRefs = [{repo: repo, collection: collection, filename: filename}] */
+    const summaryRefs = await ListSummaries()
+    console.log("refs " + JSON.stringify(summaryRefs))
+    /* const collections = filenames.map(decodeFilename) */
 
     const decodeReportFilename = (filename) => {
         const uriEncodedCollection = filename.match("report_(.*).json.gz")[1]
@@ -37,8 +34,8 @@ export default async function Collections() {
                     </tr>
                 </thead>
                 <tbody>
-                    {collections.map((collection, n) =>
-                    (<tr key={n}><td className={cellClassNames}><Link href={`/collection/${collection}`}>{collection}</Link></td>
+                    {summaryRefs.map((summary, n) =>
+                    (<tr key={n}><td className={cellClassNames}><Link href={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}>{summary.collection}</Link></td>
                          <td className={cellClassNames}>4321</td>
                          <td className={`text-right ${cellClassNames}`}>2024-05-06</td>
                         </tr>))}
