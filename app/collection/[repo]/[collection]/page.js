@@ -99,7 +99,7 @@ export default async function Collection({params}) {
                             <tbody>
                             {tractKeys.map((tract, n) =>
                                 <tr key={n}>
-                                <td className="p-1"><Link href={`/tract/${tract}/${collection}`}>{tract}</Link></td>
+                                <td className="p-1"><Link href={`/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${tract}`}>{tract}</Link></td>
                                 <td className="p-1 text-right">{tractEntries[tract]}</td></tr>
                             )}
                             </tbody>

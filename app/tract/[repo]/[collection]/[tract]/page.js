@@ -2,10 +2,10 @@
 import React from 'react';
 import Link from 'next/link'
 
-import { GetSummary } from '../../../summaries'
+import { GetSummary } from '../../../../summaries'
 
-import PlotPager from '../../../plotPager'
-import PlotDisplay from '../../../plotDisplay'
+import PlotPager from '../../../../plotPager'
+import PlotDisplay from '../../../../plotDisplay'
 
 export const revalidate = 180
 
@@ -13,7 +13,8 @@ export const revalidate = 180
 export default async function Collection({params, searchParams}) {
 
 
-    const collection = params['path'].join("/")
+    const repo = decodeURIComponent(params['repo'])
+    const collection = decodeURIComponent(params['collection'])
     const tract = params['tract']
 
     const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
@@ -49,7 +50,7 @@ export default async function Collection({params, searchParams}) {
 
     return (
         <div>
-            <div className="text-m m-5"><Link href={`/collection/${collection}`}>&lt;- Back to collection</Link></div>
+            <div className="text-m m-5"><Link href={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link></div>
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>
             <div className="">
@@ -57,7 +58,7 @@ export default async function Collection({params, searchParams}) {
                     <div key={n}>
                         <div className="m-8 text-xl font-medium border-b-2 border-black">{plotGroup}_*</div>
                     <PlotPager plotsPerPage={6} plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
-                            <PlotDisplay key={n} plotEntry={entry} showDataId={false} />)}  />
+                            <PlotDisplay key={n} plotEntry={ ({...entry, repo: repo}) } showDataId={false} />)}  />
                         <div className="clear-both"></div>
                     </div>
                 )}
