@@ -2,8 +2,8 @@
 import React from 'react';
 import Link from 'next/link'
 
-import SelectionDropdown from '../../../selectionDropdown'
-import { GetSummary } from '../../../summaries'
+import SelectionDropdown from '@/components/selectionDropdown'
+import { GetSummary } from '@/lib/summaries'
 
 export const revalidate = 180
 

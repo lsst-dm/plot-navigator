@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { GetButlerURL } from '../../../summaries'
+import { GetButlerURL } from '@/lib/summaries'
 
 export async function GET(request, { params }) {
 

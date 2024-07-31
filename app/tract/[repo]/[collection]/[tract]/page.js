@@ -2,10 +2,10 @@
 import React from 'react';
 import Link from 'next/link'
 
-import { GetSummary } from '../../../../summaries'
+import { GetSummary } from '@/lib/summaries'
 
-import PlotPager from '../../../../plotPager'
-import PlotDisplay from '../../../../plotDisplay'
+import PlotPager from '@/components/plotPager'
+import PlotDisplay from '@/components/plotDisplay'
 
 export const revalidate = 180
 

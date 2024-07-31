@@ -1,7 +1,7 @@
 
 import Link from 'next/link'
 
-import {ListSummaries, GetSummary, ListReports} from './summaries'
+import {ListSummaries, GetSummary, ListReports} from '@/lib/summaries'
 
 export const revalidate = 60
 
