@@ -14,7 +14,7 @@ export default function TabNav({panes}) {
 
     const buttonClass = "p-2 border-t-2 border-x-2 m-1 float-left w-48 text-center hover:underline hover:cursor-pointer m-2 " 
     const buttons = panes.map((pane, n) =>  (
-        <Link replace scroll={false} href={`?t=${n}`} onClick={() => setCurrentPane(n)}>
+        <Link replace scroll={false} key={n} href={`?t=${n}`} onClick={() => setCurrentPane(n)}>
             <div className={currentPane == n ? buttonClass + " font-bold" : buttonClass} >
                 {pane.title}
             </div>
