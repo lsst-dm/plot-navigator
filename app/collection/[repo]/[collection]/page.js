@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import SelectionDropdown from '@/components/selectionDropdown'
 import { GetSummary } from '@/lib/summaries'
+import TabNav from '@/components/TabNav'
 
 export const revalidate = 180
 
@@ -78,8 +79,60 @@ export default async function Collection({params}) {
         })
     })
 
-    const globalKeys = Object.keys(globalEntries)
-    globalKeys.sort()
+
+    const selByDataId = (
+                <div className="">
+                    <div className="border-2 rounded mr-4 p-4 w-48 float-left">
+                        <table className="divide-y">
+                        <thead>
+                            <tr><td>Tract</td><td>Plot count</td></tr>
+                        </thead>
+                        <tbody>
+                        {tractKeys.map((tract, n) =>
+                            <tr key={n}>
+                            <td className="p-1"><Link href={`/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${tract}`}>{tract}</Link></td>
+                            <td className="p-1 text-right">{tractEntries[tract]}</td></tr>
+                        )}
+                        </tbody>
+                        </table>
+                    </div>
+
+                    <div className="border-2 rounded mr-4 p-4 w-48 float-left">
+                        <table className="divide-y">
+                        <thead>
+                            <tr><td>Visit</td><td>Plot count</td></tr>
+                        </thead>
+                        <tbody>
+                        {visitKeys.map((visit, n) =>
+                            <tr key={n}>
+                            <td className="p-1"><Link href={`/visit/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${visit}`}>{visit}</Link></td>
+                            <td className="p-1 text-right">{visitEntries[visit]}</td></tr>
+                        )}
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+    )
+
+    const selByPlotName = (
+                <div className="">
+                    <div className="border-2 rounded mr-2 p-4 float-left">
+                        <table className="divide-y">
+                        <thead>
+                            <tr><td>Plot Type</td><td>Plot count</td></tr>
+                        </thead>
+                        <tbody>
+                        {plotKeys.map((plot, n) =>
+                            <tr key={n}>
+                            <td className="p-1"><Link href={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
+                            <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
+                        )}
+                        </tbody>
+                        </table>
+                    </div>
+
+                </div>
+    )
 
 
     return (
@@ -88,62 +141,10 @@ export default async function Collection({params}) {
             <div className="text-2xl m-5">{collection}</div>
 
             <div className="">
-                <SelectionDropdown title="By Data ID"
-                contents={
-                    <div className="py-4">
-                        <div className="border-2 rounded mr-4 p-4 w-48 float-left">
-                            <table className="divide-y">
-                            <thead>
-                                <tr><td>Tract</td><td>Plot count</td></tr>
-                            </thead>
-                            <tbody>
-                            {tractKeys.map((tract, n) =>
-                                <tr key={n}>
-                                <td className="p-1"><Link href={`/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${tract}`}>{tract}</Link></td>
-                                <td className="p-1 text-right">{tractEntries[tract]}</td></tr>
-                            )}
-                            </tbody>
-                            </table>
-                        </div>
-
-                        <div className="border-2 rounded mr-4 p-4 w-48 float-left">
-                            <table className="divide-y">
-                            <thead>
-                                <tr><td>Visit</td><td>Plot count</td></tr>
-                            </thead>
-                            <tbody>
-                            {visitKeys.map((visit, n) =>
-                                <tr key={n}>
-                                <td className="p-1"><Link href={`/visit/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${visit}`}>{visit}</Link></td>
-                                <td className="p-1 text-right">{visitEntries[visit]}</td></tr>
-                            )}
-                            </tbody>
-                            </table>
-                        </div>
-
-                    </div>} />
-
-                <SelectionDropdown title="By Plot Type"
-                contents={
-                    <div className="py-4">
-                        <div className="border-2 rounded mr-2 p-4 float-left">
-                            <table className="divide-y">
-                            <thead>
-                                <tr><td>Plot Type</td><td>Plot count</td></tr>
-                            </thead>
-                            <tbody>
-                            {plotKeys.map((plot, n) =>
-                                <tr key={n}>
-                                <td className="p-1"><Link href={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
-                                <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
-                            )}
-                            </tbody>
-                            </table>
-                        </div>
-
-                    </div>} />
-
-
+                <TabNav panes={[
+                    {title: "Select by Plot Name", content: selByPlotName},
+                    {title: "Select by Data Id", content: selByDataId},
+                ]} />
             </div>
 
         </div>
