@@ -6,7 +6,7 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
     const {instrument, skymap, ...dataId} = JSON.parse(plotEntry.dataId)
     const uuid = plotEntry.id
     const repo = plotEntry.repo
-    const datasetType = plotEntry.datasetType
+    const datasetType = plotEntry.datasetType ?? ''
 
     const splitType = [...datasetType.matchAll(/[a-zA-Z0-9]*(_|$)/g)].map((x) => x[0])
     const typeWithWbr = splitType.join('\u00ad')
