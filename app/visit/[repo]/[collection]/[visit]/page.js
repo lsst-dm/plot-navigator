@@ -15,18 +15,18 @@ export default async function Collection({params, searchParams}) {
 
     const repo = decodeURIComponent(params['repo'])
     const collection = decodeURIComponent(params['collection'])
-    const tract = params['tract']
+    const visit = params['visit']
 
     const collectionData = await GetSummary(repo, collection)
 
     var plotEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
+    Object.entries(collectionData['visits']).forEach(([plot, plotIdList]) =>  {
 
         plotIdList.forEach((plotEntry) => {
             const dataId = JSON.parse(plotEntry['dataId'])
-            const thisTract = dataId['tract']
+            const thisVisit = dataId['visit']
             plotEntry['datasetType'] = plot
-            if(thisTract == tract) {
+            if(thisVisit == visit) {
                 if(plotEntries[plot]) {
                     plotEntries[plot] = [plotEntry, ...plotEntries[plot]]
                 } else {
@@ -52,7 +52,7 @@ export default async function Collection({params, searchParams}) {
         <div>
             <div className="text-m m-5"><Link href={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link></div>
             <div className="text-2xl m-5">{collection}</div>
-            <div className="text-2xl m-5">Tract {tract}</div>
+            <div className="text-2xl m-5">Visit {visit}</div>
             <div className="">
                 {plotGroups.map( (plotGroup, n) =>
                     <div key={n}>

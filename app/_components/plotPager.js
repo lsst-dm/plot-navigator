@@ -27,8 +27,6 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
     }
 
     const showLightboxEntry = (entry)  => {
-        console.log("showLightboxEntry")
-        console.log(entry)
         setDisplayedEntry(entry)
         setInLightbox(true)
     }
@@ -82,7 +80,7 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
                             </div>
                         : "" }
                     </div>
-                    <div className="w-1/2 float-left" onClick={doNothing}>
+                    <div className="w-1/2 float-left bg-white" onClick={doNothing}>
                         {plotEntries[displayedEntry]}
                     </div>
                     <div className="w-1/4 float-left">

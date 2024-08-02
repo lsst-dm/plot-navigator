@@ -1,11 +1,12 @@
 
 import React from 'react';
 
-export default async function PlotDisplay({plotEntry, showDataId = true, showDatasetType = false}) {
+export default async function PlotDisplay({plotEntry, showDataId = true, showDatasetType = false, showPermalink = false}) {
 
     const {instrument, skymap, ...dataId} = JSON.parse(plotEntry.dataId)
     const uuid = plotEntry.id
     const repo = plotEntry.repo
+    const permalink = plotEntry.permalink ?? ''
     const datasetType = plotEntry.datasetType ?? ''
 
     const splitType = [...datasetType.matchAll(/[a-zA-Z0-9]*(_|$)/g)].map((x) => x[0])
@@ -19,8 +20,11 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
 
     return (
         <div className="m-2">
-            { showDataId ? <div className="text-1xl my-5 text-wrap">{dataIdString}</div> : "" }
-            { showDatasetType ? <div className="text-1xl my-5 text-wrap">{typeWithWbr}</div> : "" }
+            <div className="text-1xl my-5 text-wrap float-left">
+                { showDataId ? dataIdString : "" }
+                { showDatasetType ? typeWithWbr : "" }
+            </div>
+            { showPermalink ? <div className="text-1xl float-right"><a href={`${process.env.BASE_URL ?? ''}/${permalink}`}>Plot link</a></div> : "" }
             <img src={`${process.env.BASE_URL ?? '' }/image/${encodeURIComponent(repo)}/${uuid}`} />
         </div>
 
