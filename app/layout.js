@@ -6,6 +6,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "Plot Navigator v3",
   description: "",
+  icons: [{
+      url: '/rubin-favicon.svg',
+      type: 'image/svg+xml'
+  }]
 };
 
 export default function RootLayout({ children }) {

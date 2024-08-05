@@ -77,7 +77,7 @@ async function _ListSummariesS3(repoName) {
     const client = _getClient()
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
-        Prefix: `${encodeURIComponent(repoName)}/`
+        Prefix: `${encodeURIComponent(repoName)}/`,
     });
 
     try {
@@ -89,7 +89,7 @@ async function _ListSummariesS3(repoName) {
             const { Contents, IsTruncated, NextContinuationToken } =
                 await client.send(command)
             if(Contents) {
-                filenameArrays.push(Contents.map((entry) => entry.Key))
+                filenameArrays.push(Contents)
             }
             isTruncated = IsTruncated
             command.input.ContinuationToken = NextContinuationToken
@@ -134,7 +134,7 @@ async function ListSummaries() {
     if(process.env.BUCKET_NAME) {
         const res = await Promise.all(repos.map(repo =>
             {
-                return _ListSummariesS3(repo).then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename})))
+                return _ListSummariesS3(repo).then((entries) => entries.map(entry => ({repo: repo, collection: decodeFilename(entry.Key), filename: entry.Key, lastModified: entry.LastModified})))
             }))
         return res.flat()
     } else {

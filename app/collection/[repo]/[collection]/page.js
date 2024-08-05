@@ -15,7 +15,6 @@ export default async function Collection({params}) {
     const repo = decodeURIComponent(params['repo'])
 
     const collectionData = await GetSummary(repo, collection)
-    console.log(JSON.stringify(Object.keys(collectionData)))
 
     var tractEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
@@ -82,7 +81,7 @@ export default async function Collection({params}) {
 
     const selByDataId = (
                 <div className="">
-                    <div className="border-2 rounded mr-4 p-4 w-48 float-left">
+                    <div className="border-0 rounded mr-4 p-4 w-48 float-left">
                         <table className="divide-y">
                         <thead>
                             <tr><td>Tract</td><td>Plot count</td></tr>
@@ -97,7 +96,7 @@ export default async function Collection({params}) {
                         </table>
                     </div>
 
-                    <div className="border-2 rounded mr-4 p-4 w-48 float-left">
+                    <div className="border-0 rounded mr-4 p-4 w-48 float-left">
                         <table className="divide-y">
                         <thead>
                             <tr><td>Visit</td><td>Plot count</td></tr>
@@ -116,7 +115,7 @@ export default async function Collection({params}) {
 
     const selByPlotName = (
                 <div className="">
-                    <div className="border-2 rounded mr-2 p-4 float-left">
+                    <div className="border-0 rounded mr-2 p-4 float-left">
                         <table className="divide-y">
                         <thead>
                             <tr><td>Plot Type</td><td>Plot count</td></tr>
