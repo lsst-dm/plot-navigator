@@ -1,20 +1,23 @@
 
 import React from 'react';
+import Link from 'next/link'
 
-import { GetSummary } from '../../../summaries'
+import { GetSummary } from '@/lib/summaries'
 
-import PlotPager from '../../../plotPager'
-import PlotDisplay from '../../../plotDisplay'
+import PlotPager from '@/components/plotPager'
+import PlotDisplay from '@/components/plotDisplay'
+
+export const revalidate = 180
 
 
 export default async function Collection({params, searchParams}) {
 
 
-    const collection = params['path'].join("/")
+    const repo = decodeURIComponent(params['repo'])
+    const collection = decodeURIComponent(params['collection'])
     const tract = params['tract']
 
-    const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
-    const collectionData = await GetSummary("embargo", collection)
+    const collectionData = await GetSummary(repo, collection)
 
     var plotEntries = {}
     Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
@@ -22,6 +25,7 @@ export default async function Collection({params, searchParams}) {
         plotIdList.forEach((plotEntry) => {
             const dataId = JSON.parse(plotEntry['dataId'])
             const thisTract = dataId['tract']
+            plotEntry['datasetType'] = plot
             if(thisTract == tract) {
                 if(plotEntries[plot]) {
                     plotEntries[plot] = [plotEntry, ...plotEntries[plot]]
@@ -44,18 +48,17 @@ export default async function Collection({params, searchParams}) {
         return matchingNames.map(name => plotEntries[name]).flat()
     }
 
-
     return (
         <div>
-            <div className="text-m m-5"><a href={`/collection/${collection}`}>&lt;- Back to collection</a></div>
+            <div className="text-m m-5"><Link href={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link></div>
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>
             <div className="">
                 {plotGroups.map( (plotGroup, n) =>
                     <div key={n}>
                         <div className="m-8 text-xl font-medium border-b-2 border-black">{plotGroup}_*</div>
-                    <PlotPager plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
-                            <PlotDisplay key={n} plotEntry={entry} showDataId={false} />)} plotsPerPage={6} />
+                    <PlotPager plotsPerPage={6} plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
+                            <PlotDisplay key={n} plotEntry={ ({...entry, repo: repo}) } showDataId={false} showDatasetType={true} />)}  />
                         <div className="clear-both"></div>
                     </div>
                 )}

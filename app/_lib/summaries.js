@@ -7,6 +7,22 @@ const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
+function GetButlerURL(repoName) {
+
+    const repoUrls = (() => {
+        try {
+            return JSON.parse(process.env.REPO_URLS)
+        } catch (err) {
+            console.error(`Could not parse REPO_URLS env var, ${err}`)
+            console.error(`REPO_URLS='${process.env.REPO_URLS}'`)
+            return {}
+        }
+    })()
+
+    return repoUrls[repoName]
+
+}
+
 function _getClient() {
 
     const client = new S3Client({
@@ -18,6 +34,7 @@ function _getClient() {
             secretAccessKey: process.env.S3_SECRET,
         },
     })
+
     return client
 }
 
@@ -26,7 +43,7 @@ async function _GetSummaryS3(repoName, collectionName) {
     const client = _getClient()
     const command = new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
-        Key: `${repoName}/collection_${encodeURIComponent(collectionName)}.json.gz`
+        Key: `${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`
     })
 
     try {
@@ -48,7 +65,7 @@ async function GetSummary(repoName, collectionName) {
         return await _GetSummaryS3(repoName, collectionName)
 
     } else {
-        const gzData = await readFile(`data/${repoName}/collection_${encodeURIComponent(collectionName)}.json.gz`)
+        const gzData = await readFile(`data/${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`)
         const collectionData = JSON.parse(zlib.gunzipSync(gzData))
         return collectionData
     }
@@ -60,7 +77,7 @@ async function _ListSummariesS3(repoName) {
     const client = _getClient()
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
-        Prefix: `${repoName}/`
+        Prefix: `${encodeURIComponent(repoName)}/`,
     });
 
     try {
@@ -72,7 +89,7 @@ async function _ListSummariesS3(repoName) {
             const { Contents, IsTruncated, NextContinuationToken } =
                 await client.send(command)
             if(Contents) {
-                filenameArrays.push(Contents.map((entry) => entry.Key))
+                filenameArrays.push(Contents)
             }
             isTruncated = IsTruncated
             command.input.ContinuationToken = NextContinuationToken
@@ -86,7 +103,7 @@ async function _ListSummariesS3(repoName) {
 }
 
 async function _ListSummariesFilesystem(repoName) {
-    const repoDir = `data/${repoName}`
+    const repoDir = `data/${encodeURIComponent(repoName)}`
     try {
         return fs.readdirSync(repoDir).filter(
             (filename) => filename.match("collection_(.*).json.gz"));
@@ -97,19 +114,41 @@ async function _ListSummariesFilesystem(repoName) {
 
 async function ListSummaries() {
 
-    const repos = process.env.REPOS.split(',')
+    const decodeFilename = (filename) => {
+        const uriEncodedCollection = filename.match("collection_(.*).json.gz")[1]
+        return decodeURIComponent(uriEncodedCollection)
+    }
+
+    const repoUrls = (() => {
+        try {
+            return JSON.parse(process.env.REPO_URLS)
+        } catch (err) {
+            console.error(`Could not parse REPO_URLS env var, ${err}`)
+            console.error(`REPO_URLS='${process.env.REPO_URLS}'`)
+            return {}
+        }
+    })()
+
+    const repos = Object.keys(repoUrls)
 
     if(process.env.BUCKET_NAME) {
-        const res = await Promise.all(repos.map(repo => _ListSummariesS3(repo)))
+        const res = await Promise.all(repos.map(repo =>
+            {
+                return _ListSummariesS3(repo).then((entries) => entries.map(entry => ({repo: repo, collection: decodeFilename(entry.Key), filename: entry.Key, lastModified: entry.LastModified})))
+            }))
         return res.flat()
     } else {
-        const res = await Promise.all(repos.map(repo => _ListSummariesFilesystem(repo)))
+        const res = await Promise.all(
+            repos.map(repo => _ListSummariesFilesystem(repo)
+                 .then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename}))))
+        )
         return res.flat()
     }
 
 }
 
 async function ListReports() {
+    return []
 
     const client = _getClient()
 
@@ -161,4 +200,4 @@ async function GetReport(filename) {
 
 }
 
-export {ListSummaries, GetSummary, ListReports, GetReport}
+export {ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL}
