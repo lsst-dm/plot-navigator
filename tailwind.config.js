@@ -5,6 +5,10 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+      'duration-1000',
+      'bg-sky-500/10',
+  ],
   theme: {
     extend: {
       colors: {

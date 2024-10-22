@@ -17,7 +17,7 @@ export default async function Collection({params}) {
     const findPlotEntries = (collection, plotName)  => {
 
         const tractEntries = collectionData['tracts']?.[plotName] ?? []
-        const visitEntries = collectionData['visit']?.[plotName] ?? []
+        const visitEntries = collectionData['visits']?.[plotName] ?? []
         const globalEntries = collectionData['global']?.[plotName] ?? []
 
         return [tractEntries, visitEntries, globalEntries].flat()
