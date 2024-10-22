@@ -21,6 +21,8 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 
+RUN chown -R 1000:4085 /app/.next
+
 EXPOSE 3000
 
 ENV PORT 3000
