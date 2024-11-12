@@ -25,7 +25,7 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
                 { showDatasetType ? typeWithWbr : "" }
             </div>
             { showPermalink ? <div className="text-1xl float-right"><a href={`${process.env.BASE_URL ?? ''}/${permalink}`}>Plot link</a></div> : "" }
-            <img src={`${process.env.BASE_URL ?? '' }/image/${encodeURIComponent(repo)}/${uuid}`} />
+            <img src={`${process.env.BASE_URL ?? '' }/images/uuid/${encodeURIComponent(repo)}/${uuid}`} />
         </div>
 
     )
