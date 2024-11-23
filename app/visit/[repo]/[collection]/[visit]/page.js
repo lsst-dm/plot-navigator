@@ -58,7 +58,8 @@ export default async function Collection({params, searchParams}) {
                     <div key={n}>
                         <div className="m-8 text-xl font-medium border-b-2 border-black">{plotGroup}_*</div>
                     <PlotPager plotsPerPage={6} plotEntries={findMatchingPlots(plotEntries, plotGroup).map((entry, n) =>
-                            <PlotDisplay key={n} plotEntry={ ({...entry, repo: repo}) } showDataId={false} showDatasetType={true} />)}  />
+                        ({dataId: {}, plot: <PlotDisplay key={n} plotEntry={ ({...entry, repo: repo}) } showDataId={false} showDatasetType={true} />})
+                    )} />
                         <div className="clear-both"></div>
                     </div>
                 )}

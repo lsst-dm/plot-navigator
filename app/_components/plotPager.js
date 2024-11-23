@@ -2,16 +2,40 @@
 'use client'
 
 import React from 'react';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import BandSelector from './bandSelector.js'
 
 export default function PlotPager({plotEntries, plotsPerPage = 10}) {
 
+    const [selectedBands, setSelectedBands] = useState({u: true, g: true, r: true, i: true, z: true, y: true})
 
     const [currentPage, setCurrentPage] = useState(1)
     const [inLightbox, setInLightbox] = useState(false)
     const [displayedEntry, setDisplayedEntry] = useState(0)
 
-    const totalPages = Math.ceil(plotEntries.length/plotsPerPage)
+    const getFilteredEntries = () => {
+
+        const indexedEntries = plotEntries.map((entry, n) => ({dataId: entry.dataId, plot: entry.plot, index: n}))
+        return indexedEntries.filter(
+                    (indexedEntry) => selectedBands[indexedEntry.dataId.band] || !('band' in indexedEntry.dataId) )
+    }
+
+    const totalPages = () => {
+        return Math.ceil(getFilteredEntries().length/plotsPerPage)
+    }
+
+    const onBandUpdated = (band, value) => {
+        setSelectedBands({...selectedBands, [band]: event.target.checked})
+    }
+
+    useEffect(() => {
+        if(currentPage > totalPages()) {
+            setCurrentPage(totalPages())
+        }
+        if(currentPage == 0 && totalPages() > 0) {
+            setCurrentPage(1)
+        }
+    }, [selectedBands])
 
 
     const previousPage = () => {
@@ -21,7 +45,7 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
     }
 
     const nextPage = () => {
-        if(currentPage < totalPages) {
+        if(currentPage < totalPages()) {
             setCurrentPage(currentPage + 1)
         }
     }
@@ -52,23 +76,36 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
         }
     }
 
+
+    const getSlice = (currentPage) => {
+
+        return getFilteredEntries().slice((currentPage - 1) * plotsPerPage, currentPage * plotsPerPage)
+    }
+
+
     return (
         <div>
-            <div className="flex flex-row justify-center">
-                <div className="m-3">
-                    { currentPage > 1 ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={previousPage}>Prev</button> :
-                        <div>Prev</div> }
+            <div className="grid grid-cols-3">
+                <div></div>
+                <div className="flex flex-row items-center justify-center">
+                    <div className="m-3">
+                        { currentPage > 1 ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={previousPage}>Prev</button> :
+                            <div>Prev</div> }
+                        </div>
+                    <div className="m-3">Page {currentPage}/{totalPages()}</div>
+                    <div className="m-3">
+                        { currentPage < totalPages() ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={nextPage}>Next</button> :
+                            <div>Next</div> }
                     </div>
-                <div className="m-3">Page {currentPage}/{totalPages}</div>
-                <div className="m-3">
-                    { currentPage < totalPages ? <button className="p-2 rounded-md text-white bg-sky-600" onClick={nextPage}>Next</button> :
-                        <div>Next</div> }
-                    </div>
+                </div>
+                <div className="m-2">
+                    <BandSelector selectedBands={selectedBands} onBandUpdated={onBandUpdated} />
+                </div>
             </div>
             <div className="flex flex-row flex-wrap justify-center">
-                {plotEntries.slice((currentPage - 1) * plotsPerPage, currentPage * plotsPerPage).map((plotEntry, n) =>
-                    <div key={n} className=" w-[28rem] p-1 m-0" onClick={() => showLightboxEntry(n + (currentPage - 1) * plotsPerPage)}>
-                        {plotEntry}
+                {getSlice(currentPage).map((indexedEntry, n) =>
+                    <div key={n} className=" w-[28rem] p-1 m-0" onClick={() => showLightboxEntry(indexedEntry.index)}>
+                        {indexedEntry.plot}
                     </div>
                 )}
             </div>
@@ -83,7 +120,7 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
                         : "" }
                     </div>
                     <div className="w-1/2 float-left bg-white" onClick={doNothing}>
-                        {plotEntries[displayedEntry]}
+                        {plotEntries[displayedEntry].plot}
                     </div>
                     <div className="w-1/4 float-left">
                         {displayedEntry < (plotEntries.length  - 1) ?

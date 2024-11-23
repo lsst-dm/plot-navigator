@@ -39,8 +39,9 @@ export default async function Collection({params, searchParams}) {
     /* We want the permalink on when in lightbox but off when in the general display, not sure how
      * to do that yet */
     const plotDisplays = plotEntries.map((entry, n) => 
-        (<PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
-        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />))
+        ({dataId: JSON.parse(entry.dataId), plot: <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
+    )
 
     return (
         <div>
