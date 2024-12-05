@@ -37,6 +37,10 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
         }
     }, [selectedBands])
 
+    const displayBandSelector = () => {
+        const dimensions = new Set(plotEntries.map((entry) => Object.keys(entry.dataId)).flat())
+        return (dimensions.has('band'))
+    }
 
     const previousPage = () => {
         if(currentPage > 1) {
@@ -99,7 +103,7 @@ export default function PlotPager({plotEntries, plotsPerPage = 10}) {
                     </div>
                 </div>
                 <div className="m-2">
-                    <BandSelector selectedBands={selectedBands} onBandUpdated={onBandUpdated} />
+                    { displayBandSelector() ? <BandSelector selectedBands={selectedBands} onBandUpdated={onBandUpdated} /> : "" }
                 </div>
             </div>
             <div className="flex flex-row flex-wrap justify-center">
