@@ -29,10 +29,23 @@ export default async function Collection({params, searchParams}) {
 
     const collectionData = await GetSummary(repo, collection)
 
-    const plotEntries = findPlotEntries(collectionData, plotName)
+    const dataIdSortFunc = (a, b) => {
+        const dataIdA = JSON.parse(a.dataId)
+        const dataIdB = JSON.parse(b.dataId)
+        if('tract' in dataIdA && 'tract' in dataIdB) {
+            return dataIdA.tract - dataIdB.tract
+        } else if('visit' in dataIdA && 'visit' in dataIdB) {
+            return dataIdA.visit - dataIdB.visit
+        } else if('band' in dataIdA && 'band' in dataIdB) {
+            const bandsOrder = ['u', 'g', 'r', 'i', 'z', 'y']
+            return bandsOrder.indexOf(dataIdA.band) - bandsOrder.indexOf(dataIdB.band)
+        }
+        return 0
+    }
+
+    const plotEntries = findPlotEntries(collectionData, plotName).sort(dataIdSortFunc)
 
     const encodeDataId = (id) => {
-       /* return encodeURIComponent(JSON.stringify(JSON.parse(id.trim()))) */
         return encodeURIComponent(id.trim())
     }
 
