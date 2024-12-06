@@ -29,18 +29,32 @@ export default async function Collection({params, searchParams}) {
 
     const collectionData = await GetSummary(repo, collection)
 
-    const plotEntries = findPlotEntries(collectionData, plotName)
+    const dataIdSortFunc = (a, b) => {
+        const dataIdA = JSON.parse(a.dataId)
+        const dataIdB = JSON.parse(b.dataId)
+        if('tract' in dataIdA && 'tract' in dataIdB) {
+            return dataIdA.tract - dataIdB.tract
+        } else if('visit' in dataIdA && 'visit' in dataIdB) {
+            return dataIdA.visit - dataIdB.visit
+        } else if('band' in dataIdA && 'band' in dataIdB) {
+            const bandsOrder = ['u', 'g', 'r', 'i', 'z', 'y']
+            return bandsOrder.indexOf(dataIdA.band) - bandsOrder.indexOf(dataIdB.band)
+        }
+        return 0
+    }
+
+    const plotEntries = findPlotEntries(collectionData, plotName).sort(dataIdSortFunc)
 
     const encodeDataId = (id) => {
-       /* return encodeURIComponent(JSON.stringify(JSON.parse(id.trim()))) */
         return encodeURIComponent(id.trim())
     }
 
     /* We want the permalink on when in lightbox but off when in the general display, not sure how
      * to do that yet */
     const plotDisplays = plotEntries.map((entry, n) => 
-        (<PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
-        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />))
+        ({dataId: JSON.parse(entry.dataId), plot: <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
+    )
 
     return (
         <div>
