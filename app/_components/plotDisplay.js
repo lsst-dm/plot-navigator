@@ -11,10 +11,6 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
 
     const splitType = [...datasetType.matchAll(/[a-zA-Z0-9]*(_|$)/g)].map((x) => x[0])
     const typeWithWbr = splitType.join('\u00ad')
-    /*
-    const typeWithWbr = splitType.map((x) => [x, <wbr/>]).flat()
-    console.log(typeWithWbr)
-    */
 
     const dataIdString = Object.entries(dataId).map(([k,v]) => `${k}: ${v}`).join(', ')
 
@@ -25,7 +21,7 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
                 { showDatasetType ? typeWithWbr : "" }
             </div>
             { showPermalink ? <div className="text-1xl float-right"><a href={`${process.env.BASE_URL ?? ''}/${permalink}`}>Plot link</a></div> : "" }
-            <img src={`${process.env.BASE_URL ?? '' }/images/uuid/${encodeURIComponent(repo)}/${uuid}`} />
+            <img key={uuid} src={`${process.env.BASE_URL ?? '' }/images/uuid/${encodeURIComponent(repo)}/${uuid}`} />
         </div>
 
     )
