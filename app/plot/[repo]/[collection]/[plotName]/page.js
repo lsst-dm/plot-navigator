@@ -29,10 +29,46 @@ export default async function Collection({params, searchParams}) {
 
     const collectionData = await GetSummary(repo, collection)
 
-    const plotEntries = findPlotEntries(collectionData, plotName)
+    const dataIdSortFunc = (a, b) => {
+        const dataIdA = JSON.parse(a.dataId)
+        const dataIdB = JSON.parse(b.dataId)
+        const bandsOrder = ['u', 'g', 'r', 'i', 'z', 'y']
+
+        if('tract' in dataIdA && 'tract' in dataIdB) {
+            const tract_comparision = dataIdA.tract - dataIdB.tract
+            if(tract_comparision != 0) {
+                return tract_comparision
+            }
+        }
+
+        if('visit' in dataIdA && 'visit' in dataIdB) {
+            const visit_comparison = dataIdA.visit - dataIdB.visit
+            if(visit_comparison != 0) {
+                return visit_comparison
+            }
+        }
+
+        if('band' in dataIdA && 'band' in dataIdB) {
+            const band_comparison = bandsOrder.indexOf(dataIdA.band) - bandsOrder.indexOf(dataIdB.band)
+            if(band_comparison != 0) {
+                return band_comparison
+            }
+        }
+
+        if('physical_filter' in dataIdA && 'physical_filter' in dataIdB) {
+            const physical_filter_comparison = bandsOrder.indexOf(dataIdA.physical_filter[0]) - bandsOrder.indexOf(dataIdB.physical_filter[0])
+            if(physical_filter_comparison != 0) {
+                return physical_filter_comparison
+            }
+        }
+
+        /* if none of these dimensions are available */
+        return 0
+    }
+
+    const plotEntries = findPlotEntries(collectionData, plotName).sort(dataIdSortFunc)
 
     const encodeDataId = (id) => {
-       /* return encodeURIComponent(JSON.stringify(JSON.parse(id.trim()))) */
         return encodeURIComponent(id.trim())
     }
 
