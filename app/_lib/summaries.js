@@ -65,7 +65,7 @@ async function GetSummary(repoName, collectionName) {
         return await _GetSummaryS3(repoName, collectionName)
 
     } else {
-        const gzData = await readFile(`data/${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`)
+        const gzData = await readFile(`test_assets/summaries/${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`)
         const collectionData = JSON.parse(zlib.gunzipSync(gzData))
         return collectionData
     }
@@ -103,10 +103,11 @@ async function _ListSummariesS3(repoName) {
 }
 
 async function _ListSummariesFilesystem(repoName) {
-    const repoDir = `data/${encodeURIComponent(repoName)}`
+    const repoDir = `test_assets/summaries/${encodeURIComponent(repoName)}`
     try {
+        console.log(fs.readdirSync(repoDir))
         return fs.readdirSync(repoDir).filter(
-            (filename) => filename.match("collection_(.*).json.gz"));
+            (filename) => filename.match("^collection_(.*).json.gz$"));
     } catch (error) {
         return []
     }
@@ -140,7 +141,8 @@ async function ListSummaries() {
     } else {
         const res = await Promise.all(
             repos.map(repo => _ListSummariesFilesystem(repo)
-                 .then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename}))))
+                 .then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename,
+                     lastModified: new Date(2025, 2, 10, 2, 30)}))))
         )
         return res.flat()
     }
