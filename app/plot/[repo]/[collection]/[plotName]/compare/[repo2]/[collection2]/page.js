@@ -4,20 +4,15 @@ import Link from 'next/link'
 
 import { GetSummary } from '@/lib/summaries'
 
-import PlotPager from '@/components/plotPager'
+import DualPlotPager from '@/components/dualPlotPager'
 import PlotDisplay from '@/components/plotDisplay'
-import CompareCollectionButton from '@/components/compareCollectionButton'
-
-import {ListSummaries } from '@/lib/summaries'
 
 export const revalidate = 180
 
 export default async function Collection({params, searchParams}) {
 
-    /* SummaryRefs = [{repo: repo, collection: collection, filename: filename, lastModified: time}] */
-    const summaryRefs = await ListSummaries()
 
-    const findPlotEntries = (collection, plotName)  => {
+    const findPlotEntries = (collectionData, plotName)  => {
 
         const tractEntries = collectionData['tracts']?.[plotName] ?? []
         const visitEntries = collectionData['visits']?.[plotName] ?? []
@@ -27,12 +22,15 @@ export default async function Collection({params, searchParams}) {
     }
 
     const repo = decodeURIComponent(params['repo'])
+    const repo2 = decodeURIComponent(params['repo2'])
     const collection = decodeURIComponent(params['collection'])
+    const collection2 = decodeURIComponent(params['collection2'])
     const plotName = decodeURIComponent(params['plotName'])
 
     const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
 
     const collectionData = await GetSummary(repo, collection)
+    const collectionData2 = await GetSummary(repo2, collection2)
 
     const dataIdSortFunc = (a, b) => {
         const dataIdA = JSON.parse(a.dataId)
@@ -73,6 +71,8 @@ export default async function Collection({params, searchParams}) {
 
     const plotEntries = findPlotEntries(collectionData, plotName).sort(dataIdSortFunc)
 
+    const plotEntries2 = findPlotEntries(collectionData2, plotName).sort(dataIdSortFunc)
+
     const encodeDataId = (id) => {
         return encodeURIComponent(id.trim())
     }
@@ -84,19 +84,18 @@ export default async function Collection({params, searchParams}) {
         permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
     )
 
+    const plotDisplays2 = plotEntries2.map((entry, n) => 
+        ({dataId: JSON.parse(entry.dataId), plot: <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo2,
+        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
+    )
+
     return (
         <div>
-            <div className="float-left">
-                <div className="text-m m-5"><Link href={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link></div>
-                <div className="text-2xl m-5">{collection}</div>
-                <div className="text-2xl m-5">{plotName}</div>
-            </div>
-            <div className="float-right">
-                <CompareCollectionButton baseURL={`${process.env.BASE_URL ?? ''}/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}`} collectionOptions={summaryRefs} />
-            </div>
-            <div className="clear-both"></div>
+            <div className="text-m m-5"><Link href={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plotName}`}>&lt;- Back to Plot</Link></div>
+            <div className="text-2xl m-5">{collection}</div>
+            <div className="text-2xl m-5">{plotName}</div>
             <div className="">
-                <PlotPager plotEntries={plotDisplays}/>
+                <DualPlotPager plotEntries={plotDisplays} plotEntries2={plotDisplays2} collectionA={collection} collectionB={collection2}/>
             </div>
         </div>
     )
