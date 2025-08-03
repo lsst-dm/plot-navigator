@@ -66,16 +66,14 @@ export default function CompareCollectionButton({
               }}
             >
               <option value="">User Collections</option>
-              {userOptions.map(
-                (collectionOption = (
-                  <option
-                    key={makeOptionString(collectionOption)}
-                    value={makeOptionString(collectionOption)}
-                  >
-                    {collectionOption.collection}
-                  </option>
-                )),
-              )}
+              {userOptions.map((collectionOption) => (
+                <option
+                  key={makeOptionString(collectionOption)}
+                  value={makeOptionString(collectionOption)}
+                >
+                  {collectionOption.collection}
+                </option>
+              ))}
             </select>
             <a href={`${baseURL}/compare/${selectedUnofficial}`}>Compare</a>
           </div>
