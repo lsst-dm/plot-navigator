@@ -23,7 +23,7 @@ function GetButlerURL(repoName) {
 
 }
 
-function _getClient() {
+function GetClient() {
 
     const client = new S3Client({
         endpoint: process.env.BUCKET_URL,
@@ -40,7 +40,7 @@ function _getClient() {
 
 async function _GetSummaryS3(repoName, collectionName) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
         Key: `${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`
@@ -61,7 +61,7 @@ async function _GetSummaryS3(repoName, collectionName) {
 
 async function GetSummary(repoName, collectionName) {
 
-    if(process.env.BUCKET_NAME) {
+    if(!process.env.ENABLE_TEST_IMAGES) {
         return await _GetSummaryS3(repoName, collectionName)
 
     } else {
@@ -74,7 +74,7 @@ async function GetSummary(repoName, collectionName) {
 
 async function _ListSummariesS3(repoName) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
         Prefix: `${encodeURIComponent(repoName)}/`,
@@ -132,7 +132,7 @@ async function ListSummaries() {
 
     const repos = Object.keys(repoUrls)
 
-    if(process.env.BUCKET_NAME) {
+    if(!process.env.ENABLE_TEST_IMAGES) {
         const res = await Promise.all(repos.map(repo =>
             {
                 return _ListSummariesS3(repo).then((entries) => entries.map(entry => ({repo: repo, collection: decodeFilename(entry.Key), filename: entry.Key, lastModified: entry.LastModified})))
@@ -152,7 +152,7 @@ async function ListSummaries() {
 async function ListReports() {
     return []
 
-    const client = _getClient()
+    const client = GetClient()
 
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
@@ -183,7 +183,7 @@ async function ListReports() {
 
 async function GetReport(filename) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
         Key: `reports/${filename}`
@@ -202,4 +202,4 @@ async function GetReport(filename) {
 
 }
 
-export {ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL}
+export {ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL, GetClient}
