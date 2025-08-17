@@ -6,7 +6,7 @@ import Link from 'next/link'
 import React from 'react';
 import { useState } from 'react'
 
-export default function ListPager({listEntries, entriesPerPage = 10}) {
+export default function ListPager({listEntries, entriesPerPage = 10, showRepo = true}) {
 
     const [currentPage, setCurrentPage] = useState(1)
 
@@ -39,14 +39,18 @@ export default function ListPager({listEntries, entriesPerPage = 10}) {
             <thead>
                 <tr>
                     <td className={cellClassNames}>Collection</td>
-                    <td className={cellClassNames}>Repo</td>
+                    { showRepo ?
+                        <td className={cellClassNames}>Repo</td>
+                    : ""}
                     <td className={`text-right ${cellClassNames}`}>Last Updated</td>
                 </tr>
             </thead>
             <tbody>
                 {getSlice(currentPage).map((summary, n) =>
                 (<tr key={n}><td className={cellClassNames}><Link href={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}>{summary.collection}</Link></td>
+                    { showRepo ?
                      <td className={`${cellClassNames}`}>{summary.repo}</td>
+                    : "" }
                      <td className={`text-right ${cellClassNames}`}>{summary.lastModified.toDateString()}</td>
                     </tr>))}
             </tbody>

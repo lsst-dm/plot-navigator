@@ -113,7 +113,7 @@ async function _ListSummariesFilesystem(repoName) {
     }
 }
 
-async function ListSummaries() {
+async function ListSummaries(repo) {
 
     const decodeFilename = (filename) => {
         const uriEncodedCollection = filename.match("collection_(.*).json.gz")[1]
@@ -130,7 +130,7 @@ async function ListSummaries() {
         }
     })()
 
-    const repos = Object.keys(repoUrls)
+    const repos = repo ? [repo] : Object.keys(repoUrls)
 
     if(!process.env.ENABLE_TEST_IMAGES) {
         const res = await Promise.all(repos.map(repo =>
