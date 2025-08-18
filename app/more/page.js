@@ -11,6 +11,8 @@ export default async function Collections() {
     /* SummaryRefs = [{repo: repo, collection: collection, filename: filename, lastModified: time}] */
     const summaryRefs = await ListSummaries("decasu")
 
+    summaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
+
     return (
         <div>
             <div className="m-5 inline-block">

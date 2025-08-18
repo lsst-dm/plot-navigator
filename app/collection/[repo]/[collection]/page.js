@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import SelectionDropdown from '@/components/selectionDropdown'
 import { GetSummary } from '@/lib/summaries'
+import TruncatedText from '@/components/TruncatedText'
 import TabNav from '@/components/TabNav'
 
 export const revalidate = 180
@@ -138,6 +139,12 @@ export default async function Collection({params}) {
         <div>
             <div className="text-m m-5"><Link href={"/"}>&lt;- Back to collections</Link></div>
             <div className="text-2xl m-5">{collection}</div>
+
+            { "note" in collectionData ? 
+                <div className="m-5">
+                    <TruncatedText text={collectionData["note"]} length={80} />
+                </div>
+            : "" }
 
             <div className="">
                 <TabNav panes={[
