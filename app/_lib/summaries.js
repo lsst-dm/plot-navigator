@@ -7,6 +7,21 @@ const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
+
+/*
+ * This function defines which repo names are "special" such that users should be sent to the "More
+ * Plots" page instead of the normal collection list page. These special collection names are hard
+ * coded in more/page.js as well, so there's little to gain from making this runtime configurable.
+ *
+ */
+function GetCollectionListURLFromRepo(repoName) {
+
+    const moreRepos = ['decasu']
+
+    return moreRepos.includes(repoName) ? '/more' : ''
+
+}
+
 function GetButlerURL(repoName) {
 
     const repoUrls = (() => {
@@ -202,4 +217,4 @@ async function GetReport(filename) {
 
 }
 
-export {ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL, GetClient}
+export {GetCollectionListURLFromRepo, ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL, GetClient}
