@@ -4,9 +4,16 @@ import React from "react";
 import { useState, useEffect } from "react";
 import BandSelector from "./bandSelector.js";
 
+
+/*
+ * TODO:
+ * - Add an option to only show plots that exist in both collections
+ * - Light box for blinking A vs B images.
+ */
+
 export default function DualPlotPager({
-  plotEntries,
-  plotEntries2,
+  plotEntriesA,
+  plotEntriesB,
   collectionA,
   collectionB,
   plotsPerPage = 10,
@@ -31,26 +38,28 @@ export default function DualPlotPager({
      * if the keys and values are the same
      */
     const uniqDataIdSet = new Set([
-      ...plotEntries.map((entry) => JSON.stringify(entry.dataId)),
-      ...plotEntries2.map((entry) => JSON.stringify(entry.dataId)),
+      ...plotEntriesA.map((entry) => JSON.stringify(entry.dataId)),
+      ...plotEntriesB.map((entry) => JSON.stringify(entry.dataId)),
     ]);
     const uniqDataIds = Array(...uniqDataIdSet).map(JSON.parse);
 
-    const dataIdStringsA = plotEntries.map((entry) =>
+    const dataIdStringsA = plotEntriesA.map((entry) =>
       JSON.stringify(entry.dataId),
     );
-    const dataIdStringsB = plotEntries2.map((entry) =>
+    const dataIdStringsB = plotEntriesB.map((entry) =>
       JSON.stringify(entry.dataId),
     );
 
-    const indexedEntries = Array(...uniqDataIdSet).map((dataId, n) => ({
-      dataId: JSON.parse(dataId),
+    const indexedEntries = uniqDataIds
+          .filter((dataId) => 'band' in dataId ? selectedBands[dataId.band] : true)
+          .map((dataId, n) => ({
+      dataId: dataId,
       index: n,
       plotA:
-        plotEntries[dataIdStringsA.findIndex((x) => x === dataId)]?.plot ??
+        plotEntriesA[dataIdStringsA.findIndex((x) => x === JSON.stringify(dataId))]?.plot ??
         null,
       plotB:
-        plotEntries2[dataIdStringsB.findIndex((x) => x === dataId)]?.plot ??
+        plotEntriesB[dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))]?.plot ??
         null,
     }));
     return indexedEntries;
@@ -75,7 +84,7 @@ export default function DualPlotPager({
 
   const displayBandSelector = () => {
     const dimensions = new Set(
-      plotEntries.map((entry) => Object.keys(entry.dataId)).flat(),
+      plotEntriesA.map((entry) => Object.keys(entry.dataId)).flat(),
     );
     return dimensions.has("band");
   };
@@ -113,7 +122,7 @@ export default function DualPlotPager({
 
   const advanceRight = (e) => {
     e.stopPropagation();
-    if (displayedEntry < plotEntries.length - 1) {
+    if (displayedEntry < plotEntriesA.length - 1) {
       setDisplayedEntry(displayedEntry + 1);
     }
   };
@@ -173,6 +182,12 @@ export default function DualPlotPager({
         <div className="w-[35rem] p-1 m-0 font-bold">{collectionA}</div>
         <div className="w-[35rem] p-1 m-0 font-bold">{collectionB}</div>
       </div>
+      {plotEntriesA.length == 0 || plotEntriesB.length == 0 ?
+          <div className="flex flex-row justify-center">
+            <div className="w-[35rem] p-1 m-0 font-bold">{plotEntriesA.length == 0 ? "No plots of this type in this collection" : ""}</div>
+            <div className="w-[35rem] p-1 m-0 font-bold">{plotEntriesB.length == 0 ? "No plots of this type in this collection" : ""}</div>
+          </div>
+      : "" }
       <div className="">
         {getSlice(currentPage).map((indexedEntry, n) => (
           <div key={n} className="flex flex-row justify-center">
@@ -230,11 +245,11 @@ export default function DualPlotPager({
           </div>
           <div className="w-2/3 float-left bg-white" onClick={doNothing}>
             <div className="[&_img]:[max-height:75vh]">
-              {plotEntries[displayedEntry].plot}
+              {plotEntriesA[displayedEntry].plot}
             </div>
           </div>
           <div className="w-1/6 float-left">
-            {displayedEntry < plotEntries.length - 1 ? (
+            {displayedEntry < plotEntriesA.length - 1 ? (
               <div
                 className="flex items-center justify-center m-8 h-64 w-16 bg-indigo-100 hover:bg-indigo-600 hover:cursor-pointer"
                 onClick={advanceRight}

@@ -95,7 +95,7 @@ export default async function Collection({params, searchParams}) {
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">{plotName}</div>
             <div className="">
-                <DualPlotPager plotEntries={plotDisplays} plotEntries2={plotDisplays2} collectionA={collection} collectionB={collection2}/>
+                <DualPlotPager plotEntriesA={plotDisplays} plotEntriesB={plotDisplays2} collectionA={collection} collectionB={collection2}/>
             </div>
         </div>
     )
