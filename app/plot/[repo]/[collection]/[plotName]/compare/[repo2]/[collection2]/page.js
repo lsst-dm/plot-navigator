@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link'
 
 import { GetSummary } from '@/lib/summaries'
+import { DataIdSortFunc } from '@/lib/dataIdFuncs'
 
 import DualPlotPager from '@/components/dualPlotPager'
 import PlotDisplay from '@/components/plotDisplay'
@@ -32,46 +33,10 @@ export default async function Collection({params, searchParams}) {
     const collectionData = await GetSummary(repo, collection)
     const collectionData2 = await GetSummary(repo2, collection2)
 
-    const dataIdSortFunc = (a, b) => {
-        const dataIdA = JSON.parse(a.dataId)
-        const dataIdB = JSON.parse(b.dataId)
-        const bandsOrder = ['u', 'g', 'r', 'i', 'z', 'y']
 
-        if('tract' in dataIdA && 'tract' in dataIdB) {
-            const tract_comparision = dataIdA.tract - dataIdB.tract
-            if(tract_comparision != 0) {
-                return tract_comparision
-            }
-        }
+    const plotEntries = findPlotEntries(collectionData, plotName)
 
-        if('visit' in dataIdA && 'visit' in dataIdB) {
-            const visit_comparison = dataIdA.visit - dataIdB.visit
-            if(visit_comparison != 0) {
-                return visit_comparison
-            }
-        }
-
-        if('band' in dataIdA && 'band' in dataIdB) {
-            const band_comparison = bandsOrder.indexOf(dataIdA.band) - bandsOrder.indexOf(dataIdB.band)
-            if(band_comparison != 0) {
-                return band_comparison
-            }
-        }
-
-        if('physical_filter' in dataIdA && 'physical_filter' in dataIdB) {
-            const physical_filter_comparison = bandsOrder.indexOf(dataIdA.physical_filter[0]) - bandsOrder.indexOf(dataIdB.physical_filter[0])
-            if(physical_filter_comparison != 0) {
-                return physical_filter_comparison
-            }
-        }
-
-        /* if none of these dimensions are available */
-        return 0
-    }
-
-    const plotEntries = findPlotEntries(collectionData, plotName).sort(dataIdSortFunc)
-
-    const plotEntries2 = findPlotEntries(collectionData2, plotName).sort(dataIdSortFunc)
+    const plotEntries2 = findPlotEntries(collectionData2, plotName)
 
     const encodeDataId = (id) => {
         return encodeURIComponent(id.trim())

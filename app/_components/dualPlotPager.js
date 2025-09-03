@@ -3,6 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import BandSelector from "./bandSelector.js";
+import { DataIdSortFunc } from '@/lib/dataIdFuncs'
 
 
 /*
@@ -62,7 +63,9 @@ export default function DualPlotPager({
         plotEntriesB[dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))]?.plot ??
         null,
     }));
-    return indexedEntries;
+
+    const sortedEntries = indexedEntries.sort((a,b) => DataIdSortFunc(a.dataId, b.dataId))
+    return sortedEntries;
   };
 
   const totalPages = () => {
