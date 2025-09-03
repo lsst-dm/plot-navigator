@@ -5,6 +5,7 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
 
     const {instrument, skymap, ...dataId} = JSON.parse(plotEntry.dataId)
     const uuid = plotEntry.id
+    const imgUrl = plotEntry.url
     const repo = plotEntry.repo
     const permalink = plotEntry.permalink ?? ''
     const datasetType = plotEntry.datasetType ?? ''
@@ -21,7 +22,11 @@ export default async function PlotDisplay({plotEntry, showDataId = true, showDat
                 { showDatasetType ? typeWithWbr : "" }
             </div>
             { showPermalink ? <div className="text-1xl float-right"><a href={`${process.env.BASE_URL ?? ''}/${permalink}`}>Plot link</a></div> : "" }
+            { uuid ?
             <img key={uuid} src={`${process.env.BASE_URL ?? '' }/images/uuid/${encodeURIComponent(repo)}/${uuid}`} />
+            :
+            <img key={imgUrl} src={`${process.env.BASE_URL ?? '' }/images/path/${imgUrl}`} />
+            }
         </div>
 
     )

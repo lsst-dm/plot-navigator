@@ -7,6 +7,21 @@ const zlib = require('zlib');
 
 const  { readFile } = require("fs/promises")
 
+
+/*
+ * This function defines which repo names are "special" such that users should be sent to the "More
+ * Plots" page instead of the normal collection list page. These special collection names are hard
+ * coded in more/page.js as well, so there's little to gain from making this runtime configurable.
+ *
+ */
+function GetCollectionListURLFromRepo(repoName) {
+
+    const moreRepos = ['decasu']
+
+    return moreRepos.includes(repoName) ? '/more' : ''
+
+}
+
 function GetButlerURL(repoName) {
 
     const repoUrls = (() => {
@@ -23,7 +38,7 @@ function GetButlerURL(repoName) {
 
 }
 
-function _getClient() {
+function GetClient() {
 
     const client = new S3Client({
         endpoint: process.env.BUCKET_URL,
@@ -40,7 +55,7 @@ function _getClient() {
 
 async function _GetSummaryS3(repoName, collectionName) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
         Key: `${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`
@@ -61,11 +76,11 @@ async function _GetSummaryS3(repoName, collectionName) {
 
 async function GetSummary(repoName, collectionName) {
 
-    if(process.env.BUCKET_NAME) {
+    if(!process.env.ENABLE_TEST_IMAGES) {
         return await _GetSummaryS3(repoName, collectionName)
 
     } else {
-        const gzData = await readFile(`data/${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`)
+        const gzData = await readFile(`test_assets/summaries/${encodeURIComponent(repoName)}/collection_${encodeURIComponent(collectionName)}.json.gz`)
         const collectionData = JSON.parse(zlib.gunzipSync(gzData))
         return collectionData
     }
@@ -74,7 +89,7 @@ async function GetSummary(repoName, collectionName) {
 
 async function _ListSummariesS3(repoName) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
         Prefix: `${encodeURIComponent(repoName)}/`,
@@ -103,16 +118,17 @@ async function _ListSummariesS3(repoName) {
 }
 
 async function _ListSummariesFilesystem(repoName) {
-    const repoDir = `data/${encodeURIComponent(repoName)}`
+    const repoDir = `test_assets/summaries/${encodeURIComponent(repoName)}`
     try {
+        console.log(fs.readdirSync(repoDir))
         return fs.readdirSync(repoDir).filter(
-            (filename) => filename.match("collection_(.*).json.gz"));
+            (filename) => filename.match("^collection_(.*).json.gz$"));
     } catch (error) {
         return []
     }
 }
 
-async function ListSummaries() {
+async function ListSummaries(repo) {
 
     const decodeFilename = (filename) => {
         const uriEncodedCollection = filename.match("collection_(.*).json.gz")[1]
@@ -129,9 +145,9 @@ async function ListSummaries() {
         }
     })()
 
-    const repos = Object.keys(repoUrls)
+    const repos = repo ? [repo] : Object.keys(repoUrls)
 
-    if(process.env.BUCKET_NAME) {
+    if(!process.env.ENABLE_TEST_IMAGES) {
         const res = await Promise.all(repos.map(repo =>
             {
                 return _ListSummariesS3(repo).then((entries) => entries.map(entry => ({repo: repo, collection: decodeFilename(entry.Key), filename: entry.Key, lastModified: entry.LastModified})))
@@ -140,7 +156,8 @@ async function ListSummaries() {
     } else {
         const res = await Promise.all(
             repos.map(repo => _ListSummariesFilesystem(repo)
-                 .then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename}))))
+                 .then((filenames) => filenames.map(filename => ({repo: repo, collection: decodeFilename(filename), filename: filename,
+                     lastModified: new Date(2025, 2, 10, 2, 30)}))))
         )
         return res.flat()
     }
@@ -150,7 +167,7 @@ async function ListSummaries() {
 async function ListReports() {
     return []
 
-    const client = _getClient()
+    const client = GetClient()
 
     const command = new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
@@ -181,7 +198,7 @@ async function ListReports() {
 
 async function GetReport(filename) {
 
-    const client = _getClient()
+    const client = GetClient()
     const command = new GetObjectCommand({
         Bucket: process.env.BUCKET_NAME,
         Key: `reports/${filename}`
@@ -200,4 +217,4 @@ async function GetReport(filename) {
 
 }
 
-export {ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL}
+export {GetCollectionListURLFromRepo, ListSummaries, GetSummary, ListReports, GetReport, GetButlerURL, GetClient}
