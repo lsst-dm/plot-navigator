@@ -147,7 +147,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
       <div className="flex flex-row flex-wrap justify-center">
         {getSlice(currentPage).map((indexedEntry, n) => (
           <div
-            key={n}
+            key={indexedEntry.index}
             className=" w-[28rem] p-1 m-0"
             onClick={() => showLightboxEntry(indexedEntry.index)}
           >
