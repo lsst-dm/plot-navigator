@@ -19,16 +19,17 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
   const [displayedEntry, setDisplayedEntry] = useState(0);
 
   const getFilteredEntries = () => {
-    const indexedEntries = plotEntries.map((entry, n) => ({
-      dataId: entry.dataId,
-      plot: entry.plot,
-      index: n,
-    }));
-    return indexedEntries.filter(
-      (indexedEntry) =>
-        selectedBands[indexedEntry.dataId.band] ||
-        !("band" in indexedEntry.dataId),
-    );
+    return plotEntries
+      .filter(
+        (indexedEntry) =>
+          selectedBands[indexedEntry.dataId.band] ||
+          !("band" in indexedEntry.dataId),
+      )
+      .map((entry, n) => ({
+        dataId: entry.dataId,
+        plot: entry.plot,
+        index: n,
+      }));
   };
 
   const totalPages = () => {
@@ -88,7 +89,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
 
   const advanceRight = (e) => {
     e.stopPropagation();
-    if (displayedEntry < plotEntries.length - 1) {
+    if (displayedEntry < getFilteredEntries().length - 1) {
       setDisplayedEntry(displayedEntry + 1);
     }
   };
@@ -185,7 +186,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
           </div>
           <div className="w-2/3 float-left bg-white" onClick={doNothing}>
             <div className="[&_img]:[max-height:75vh]">
-              {plotEntries[displayedEntry].plot}
+              {getFilteredEntries()[displayedEntry].plot}
             </div>
           </div>
           <div className="w-1/6 float-left">
