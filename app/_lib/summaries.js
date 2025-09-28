@@ -110,7 +110,6 @@ async function _ListSummariesS3(repoName) {
 async function _ListSummariesFilesystem(repoName) {
   const repoDir = `test_assets/summaries/${encodeURIComponent(repoName)}`;
   try {
-    console.log(fs.readdirSync(repoDir));
     return fs
       .readdirSync(repoDir)
       .filter((filename) => filename.match("^collection_(.*).json.gz$"));

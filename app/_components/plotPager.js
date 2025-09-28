@@ -57,13 +57,13 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
 
   const previousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage(Number(currentPage) - 1);
     }
   };
 
   const nextPage = () => {
     if (currentPage < totalPages()) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage(Number(currentPage) + 1);
     }
   };
 
@@ -118,7 +118,14 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
             )}
           </div>
           <div className="m-3">
-            Page {currentPage}/{totalPages()}
+            Page
+            <input
+              className="border border-gray-400 rounded-sm m-1 p-1"
+              size={Math.ceil(Math.log10(totalPages() + 1))}
+              value={currentPage}
+              onChange={(e) => setCurrentPage(e.target.value)}
+            />
+            /{totalPages()}
           </div>
           <div className="m-3">
             {currentPage < totalPages() ? (
@@ -145,6 +152,9 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
         </div>
       </div>
       <div className="flex flex-row flex-wrap justify-center">
+        {currentPage >= 1 && currentPage <= totalPages()
+          ? ""
+          : "Invalid page number"}
         {getSlice(currentPage).map((indexedEntry, n) => (
           <div
             key={indexedEntry.index}
