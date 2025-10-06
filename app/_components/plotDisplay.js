@@ -1,5 +1,7 @@
 import React from "react";
 
+import PlotMouseover from "./plotMouseover.js"
+
 export default async function PlotDisplay({
   plotEntry,
   showDataId = true,
@@ -22,6 +24,40 @@ export default async function PlotDisplay({
     .map(([k, v]) => `${k}: ${v}`)
     .join(", ");
 
+  let pngMetadata;
+  if(! process.env.PRODUCTION_TOOLS_HOST) {
+      pngMetadata = {};
+  } else {
+    pngMetadata = await fetch(
+      `http://${process.env.PRODUCTION_TOOLS_HOST}/${process.env.BASE_URL ?? ""}/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`,
+    )
+      .then((response) => {
+        if (response.ok) {
+          try {
+              return response.json();
+          } catch (e) {
+              return {};
+          }
+        } else {
+          return {};
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        return {};
+      });
+  }
+
+  let regions = [];
+  let region_label = "";
+  if('boxes' in pngMetadata && pngMetadata.boxes) {
+      try {
+          regions = JSON.parse(pngMetadata.boxes);
+          region_label = pngMetadata.label;
+      } catch (e) {
+      }
+  }
+
   return (
     <div className="m-2">
       <div className="text-1xl my-5 text-wrap float-left">
@@ -36,10 +72,12 @@ export default async function PlotDisplay({
         ""
       )}
       {uuid ? (
-        <img
+        <PlotMouseover
           key={uuid}
           src={`${process.env.BASE_URL ?? ""}/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
-        />
+          label={region_label}
+          regions={regions}
+      />
       ) : (
         <img
           key={imgUrl}
