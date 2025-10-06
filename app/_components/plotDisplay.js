@@ -1,5 +1,7 @@
 import React from "react";
 
+import PlotMouseover from "./plotMouseover.js"
+
 export default async function PlotDisplay({
   plotEntry,
   showDataId = true,
@@ -36,10 +38,10 @@ export default async function PlotDisplay({
         ""
       )}
       {uuid ? (
-        <img
+        <PlotMouseover img={<img
           key={uuid}
           src={`${process.env.BASE_URL ?? ""}/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
-        />
+        />} />
       ) : (
         <img
           key={imgUrl}

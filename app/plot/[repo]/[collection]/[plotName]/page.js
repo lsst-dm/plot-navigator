@@ -24,7 +24,8 @@ export default async function Collection({params, searchParams}) {
         const visitEntries = collectionData['visits']?.[plotName] ?? []
         const globalEntries = collectionData['global']?.[plotName] ?? []
 
-        return [tractEntries, visitEntries, globalEntries].flat()
+        return [tractEntries, //tractEntries,tractEntries,tractEntries,tractEntries,tractEntries,tractEntries,
+            visitEntries, globalEntries].flat()
     }
 
     const repo = decodeURIComponent(params['repo'])
