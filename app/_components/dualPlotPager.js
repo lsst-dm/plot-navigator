@@ -3,8 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import BandSelector from "./bandSelector.js";
-import { DataIdSortFunc } from '@/lib/dataIdFuncs'
-
+import { DataIdSortFunc } from "@/lib/dataIdFuncs";
 
 /*
  * TODO:
@@ -52,19 +51,25 @@ export default function DualPlotPager({
     );
 
     const indexedEntries = uniqDataIds
-          .filter((dataId) => 'band' in dataId ? selectedBands[dataId.band] : true)
-          .map((dataId, n) => ({
-      dataId: dataId,
-      index: n,
-      plotA:
-        plotEntriesA[dataIdStringsA.findIndex((x) => x === JSON.stringify(dataId))]?.plot ??
-        null,
-      plotB:
-        plotEntriesB[dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))]?.plot ??
-        null,
-    }));
+      .filter((dataId) =>
+        "band" in dataId ? selectedBands[dataId.band] : true,
+      )
+      .map((dataId, n) => ({
+        dataId: dataId,
+        index: n,
+        plotA:
+          plotEntriesA[
+            dataIdStringsA.findIndex((x) => x === JSON.stringify(dataId))
+          ]?.plot ?? null,
+        plotB:
+          plotEntriesB[
+            dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))
+          ]?.plot ?? null,
+      }));
 
-    const sortedEntries = indexedEntries.sort((a,b) => DataIdSortFunc(a.dataId, b.dataId))
+    const sortedEntries = indexedEntries.sort((a, b) =>
+      DataIdSortFunc(a.dataId, b.dataId),
+    );
     return sortedEntries;
   };
 
@@ -185,12 +190,22 @@ export default function DualPlotPager({
         <div className="w-[35rem] p-1 m-0 font-bold">{collectionA}</div>
         <div className="w-[35rem] p-1 m-0 font-bold">{collectionB}</div>
       </div>
-      {plotEntriesA.length == 0 || plotEntriesB.length == 0 ?
-          <div className="flex flex-row justify-center">
-            <div className="w-[35rem] p-1 m-0 font-bold">{plotEntriesA.length == 0 ? "No plots of this type in this collection" : ""}</div>
-            <div className="w-[35rem] p-1 m-0 font-bold">{plotEntriesB.length == 0 ? "No plots of this type in this collection" : ""}</div>
+      {plotEntriesA.length == 0 || plotEntriesB.length == 0 ? (
+        <div className="flex flex-row justify-center">
+          <div className="w-[35rem] p-1 m-0 font-bold">
+            {plotEntriesA.length == 0
+              ? "No plots of this type in this collection"
+              : ""}
           </div>
-      : "" }
+          <div className="w-[35rem] p-1 m-0 font-bold">
+            {plotEntriesB.length == 0
+              ? "No plots of this type in this collection"
+              : ""}
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
       <div className="">
         {getSlice(currentPage).map((indexedEntry, n) => (
           <div key={n} className="flex flex-row justify-center">
