@@ -24,6 +24,12 @@ export default async function PlotDisplay({
     .map(([k, v]) => `${k}: ${v}`)
     .join(", ");
 
+  let pngMetadataResp = await fetch(`http://production-tools.plot-navigator.svc.cluster.local/${process.env.BASE_URL ?? ""}/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`);
+  let pngMetadata = await pngMetadataResp.json().catch(() => ({}));
+    /*
+  console.log(`Metadata ${JSON.stringify(pngMetadata)}`);
+  */
+
   return (
     <div className="m-2">
       <div className="text-1xl my-5 text-wrap float-left">
@@ -41,7 +47,10 @@ export default async function PlotDisplay({
         <PlotMouseover img={<img
           key={uuid}
           src={`${process.env.BASE_URL ?? ""}/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
-        />} />
+        />}
+          label="Tract:"
+          regions={JSON.parse(pngMetadata['boxes']) ?? []}
+      />
       ) : (
         <img
           key={imgUrl}
