@@ -43,6 +43,15 @@ export default async function PlotDisplay({
       return {};
     });
 
+  let regions = [];
+  try {
+      if('boxes' in pngMetadata) {
+          regions = JSON.parse(pngMetadata['boxes']);
+      }
+  } catch (e) {
+      console.log(e);
+  }
+
   return (
     <div className="m-2">
       <div className="text-1xl my-5 text-wrap float-left">
@@ -62,7 +71,7 @@ export default async function PlotDisplay({
           src={`${process.env.BASE_URL ?? ""}/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
         />}
           label="Tract:"
-          regions={'boxes' in pngMetadata ? JSON.parse(pngMetadata['boxes']) ?? [] : []}
+          regions={regions}
       />
       ) : (
         <img
