@@ -8,6 +8,7 @@ import { putCollection, pollJob } from "./AddCollectionSelectServer.js";
 export default function AddCollectionSelect({ repos }) {
   const [repo, setRepo] = useState(repos[0]);
   const [collectionName, setCollectionName] = useState("");
+  const [filterCollections, setFilterCollections] = useState(false);
   const [jobId, setJobId] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusClasses, setStatusClasses] = useState("");
@@ -34,7 +35,7 @@ export default function AddCollectionSelect({ repos }) {
   }, [jobId]);
 
   const submitForm = async () => {
-    const jobId = await putCollection(repo, collectionName);
+    const jobId = await putCollection(repo, collectionName, filterCollections);
     setJobId(jobId);
     setStatusMessage("Started");
     setResultMessage("");
@@ -50,39 +51,62 @@ export default function AddCollectionSelect({ repos }) {
 
   return (
     <div className="p-2">
-      <select
-        className="p-1 m-2"
-        value={repo}
-        onChange={(e) => {
-          setRepo(e.target.value);
-        }}
-      >
-        {repos.map((repo) => (
-          <option value={repo} key={repo}>
-            {repo}
-          </option>
-        ))}
-      </select>
-      <input
-        className="m-2 border-2"
-        type="text"
-        size={40}
-        value={collectionName}
-        onChange={(e) => setCollectionName(e.target.value)}
-      />
-      <button
-        className="p-2 px-4 m-2 rounded-md text-white bg-sky-600"
-        onClick={submitForm}
-      >
-        Add
-      </button>
-      <div className={`m-2 p-2 px-4 inline-block ${statusClasses}`}>
-        {statusMessage}
-      </div>
-      <div className={`m-2 p-2 px-4 inline-block `}>{resultMessage}</div>
-      {/*
-            <button className="p-2 px-4 m-2 rounded-md text-white bg-sky-600" onClick={bounceText}>Bounce</button>
-            */}
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <select
+                className="p-2 m-2"
+                value={repo}
+                onChange={(e) => {
+                  setRepo(e.target.value);
+                }}
+              >
+                {repos.map((repo) => (
+                  <option value={repo} key={repo}>
+                    {repo}
+                  </option>
+                ))}
+              </select>
+            </td>
+            <td>
+              <input
+                className="m-2 border-2"
+                type="text"
+                size={40}
+                value={collectionName}
+                onChange={(e) => setCollectionName(e.target.value)}
+              />
+            </td>
+            <td>
+              <button
+                className="p-2 px-4 m-2 rounded-md text-white bg-sky-600"
+                onClick={submitForm}
+              >
+                Add
+              </button>
+
+              <div className={`m-2 p-2 px-4 inline-block ${statusClasses}`}>
+                {statusMessage}
+              </div>
+              <div className={`m-2 p-2 px-4 inline-block `}>{resultMessage}</div>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <label className="mx-2">
+                <input type="checkbox" className="m-1" checked={filterCollections}
+                  onChange={(event) => setFilterCollections(event.target.checked)}
+                />
+                Only include run collections with this prefix
+                </label>
+                <img className="inline mx-1" src="/plot-navigator/help_18dp.svg" />
+              </td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }

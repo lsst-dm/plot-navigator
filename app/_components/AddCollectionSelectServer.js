@@ -10,14 +10,17 @@ export async function pollJob(jobId) {
   return data;
 }
 
-export async function putCollection(repo, collectionName) {
+export async function putCollection(repo, collectionName, filterCollections = false) {
+
+  const putBody = JSON.stringify({ repo: repo, collection: collectionName,
+        filter_collections: filterCollections})
   let res = await fetch("http://production-tools/plot-navigator/cache/", {
     method: "PUT",
-    body: JSON.stringify({ repo: repo, collection: collectionName }),
+    body: putBody,
     headers: { "Content-Type": "application/json" },
   });
   let data = await res.json();
-  console.log(`putCollection ${JSON.stringify(data)}`);
+  console.log(`putCollection result: ${JSON.stringify(data)}`);
 
   return data.jobId;
 }
