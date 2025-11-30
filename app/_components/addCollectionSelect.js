@@ -3,6 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 
+import { Tooltip } from 'react-tooltip';
 import { putCollection, pollJob } from "./AddCollectionSelectServer.js";
 
 export default function AddCollectionSelect({ repos }) {
@@ -99,9 +100,16 @@ export default function AddCollectionSelect({ repos }) {
                 <input type="checkbox" className="m-1" checked={filterCollections}
                   onChange={(event) => setFilterCollections(event.target.checked)}
                 />
-                Only include run collections with this prefix
+                Only plots in collections starting with this prefix
                 </label>
-                <img className="inline mx-1" src="/plot-navigator/help_18dp.svg" />
+                <img id="helpicon" className="inline mx-1" src="/plot-navigator/help_18dp.svg"
+                  data-tooltip-id="helptooltip"
+                  data-tooltip-place="bottom"
+                  data-tooltip-html={`If this is selected and the collection name is u/username/DM-1234,<br/>
+                    then only collections in the chain like u/username/DM-1234/20251125ZT230001Z<br/>
+                    will be included and LSSTCam/runs/DRP/1234 will not.`}
+                />
+                <Tooltip id="helptooltip" />
               </td>
             <td></td>
           </tr>
