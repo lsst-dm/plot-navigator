@@ -12,8 +12,9 @@ export const revalidate = 180
 export default async function Collection({params}) {
 
 
-    const collection = decodeURIComponent(params['collection'])
-    const repo = decodeURIComponent(params['repo'])
+    const { collection: _collection, repo: _repo } = await params
+    const collection = decodeURIComponent(_collection)
+    const repo = decodeURIComponent(_repo)
 
     const collectionData = await GetSummary(repo, collection)
 

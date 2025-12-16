@@ -27,11 +27,14 @@ export default async function Collection({params, searchParams}) {
         return [tractEntries, visitEntries, globalEntries].flat()
     }
 
-    const repo = decodeURIComponent(params['repo'])
-    const collection = decodeURIComponent(params['collection'])
-    const plotName = decodeURIComponent(params['plotName'])
+    const { repo: _repo, collection: _collection, plotName: _plotName } = await params
 
-    const currentPage = parseInt(searchParams?.page) ? parseInt(searchParams?.page) : 1
+    const repo = decodeURIComponent(_repo)
+    const collection = decodeURIComponent(_collection)
+    const plotName = decodeURIComponent(_plotName)
+
+    const { page } = await searchParams
+    const currentPage = parseInt(page) ? parseInt(page) : 1
 
     const collectionData = await GetSummary(repo, collection)
 

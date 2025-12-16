@@ -23,10 +23,11 @@ export default async function Collection({params}) {
         return [tractEntries, visitEntries, globalEntries].flat()
     }
 
-    const repo = decodeURIComponent(params['repo'])
-    const collection = decodeURIComponent(params['collection'])
-    const plotName = decodeURIComponent(params['plotName'])
-    const targetDataId = JSON.parse(decodeURIComponent(params['dataId']))
+    const { repo: _repo, collection: _collection, plotName: _plotName, dataId: _dataId } = await params
+    const repo = decodeURIComponent(_repo)
+    const collection = decodeURIComponent(_collection)
+    const plotName = decodeURIComponent(_plotName)
+    const targetDataId = JSON.parse(decodeURIComponent(_dataId))
 
     const collectionData = await GetSummary(repo, collection)
 

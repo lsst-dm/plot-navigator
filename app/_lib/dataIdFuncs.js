@@ -32,6 +32,13 @@ export default function DataIdSortFunc(dataIdA, dataIdB) {
     }
   }
 
+  if ("detector" in dataIdA && "detector" in dataIdB) {
+    const detector_comparison = dataIdA.detector - dataIdB.detector;
+    if (detector_comparison != 0) {
+      return detector_comparison;
+    }
+  }
+
   /* if none of these dimensions are available */
   return 0;
 }

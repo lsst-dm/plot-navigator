@@ -10,8 +10,8 @@ import path from 'path'
 
 export async function GET(request, { params }) {
 
-    const repo = decodeURIComponent(params.repo)
-    const uuid = params.uuid
+    const { _repo, uuid } = await params
+    const repo = decodeURIComponent(_repo)
 
     if(!process.env.ENABLE_TEST_IMAGES) {
         return new Response("",{status: 404})

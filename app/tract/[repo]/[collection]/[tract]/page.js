@@ -10,12 +10,12 @@ import PlotDisplay from '@/components/plotDisplay'
 export const revalidate = 180
 
 
-export default async function Collection({params, searchParams}) {
+export default async function Collection({params}) {
 
 
-    const repo = decodeURIComponent(params['repo'])
-    const collection = decodeURIComponent(params['collection'])
-    const tract = params['tract']
+    const { repo: _repo, collection: _collection, tract } = await params
+    const repo = decodeURIComponent(_repo)
+    const collection = decodeURIComponent(_collection)
 
     const collectionData = await GetSummary(repo, collection)
 

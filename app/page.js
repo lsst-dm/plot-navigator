@@ -12,8 +12,13 @@ export default async function Collections() {
     const summaryRefs = await ListSummaries()
 
     summaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
-    const officialSummaryRefs = summaryRefs.filter((ref) => ! ref.collection.startsWith("u"))
-    const userSummaryRefs = summaryRefs.filter((ref) => ref.collection.startsWith("u"))
+
+    const userCollectionFilter = (ref) => {
+        return ref.collection.startsWith("u") || ref.collection.startsWith("LSSTCam/calib") || ref.collection.startsWith("LATISS/calib")
+    }
+
+    const officialSummaryRefs = summaryRefs.filter((ref) => ! userCollectionFilter(ref))
+    const userSummaryRefs = summaryRefs.filter((ref) => userCollectionFilter(ref))
 
     officialSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
     userSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
