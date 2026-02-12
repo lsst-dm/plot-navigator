@@ -24,14 +24,14 @@ export default function PlotMouseover({src, key, regions, label}) {
     }
 
     const mouseMove = (event) => {
-        const img_display_width = childRef.current?.getBoundingClientRect().right - childRef.current?.getBoundingClientRect().left;
-        const img_display_height = childRef.current?.getBoundingClientRect().top - childRef.current?.getBoundingClientRect().bottom;
+        const img_display_width = childRef.current?.getBoundingClientRect().width;
+        const img_display_height = childRef.current?.getBoundingClientRect().height;
 
         const x_scale = img_display_width/childRef.current?.naturalWidth;
         const y_scale = img_display_height/childRef.current?.naturalHeight;
 
         const x_value = (event.clientX - childRef.current?.getBoundingClientRect().left) / x_scale;
-        const y_value = (event.clientY - childRef.current?.getBoundingClientRect().bottom) / y_scale;
+        const y_value = (childRef.current?.getBoundingClientRect().bottom - event.clientY) / y_scale;
         setDisplayString(make_label_string(regions, x_value, y_value, label));
     }
 
