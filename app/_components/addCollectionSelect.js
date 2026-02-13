@@ -36,7 +36,7 @@ export default function AddCollectionSelect({ repos }) {
   }, [jobId]);
 
   const submitForm = async () => {
-    const jobId = await putCollection(repo, collectionName, filterCollections);
+    const jobId = await putCollection(repo, collectionName.trim(), filterCollections);
     setJobId(jobId);
     setStatusMessage("Started");
     setResultMessage("");
