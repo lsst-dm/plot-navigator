@@ -1,0 +1,86 @@
+
+import { Link } from "react-router-dom";
+
+// import { GetSummary } from '@/lib/summaries'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from "react"
+
+import PlotPager from '../components/plotPager'
+import PlotDisplay from '../components/plotDisplay'
+import CompareCollectionButton from '../components/compareCollectionButton'
+import { DataIdSortFunc } from '../components/dataIdFuncs'
+
+// import {ListSummaries } from '@/lib/summaries'
+
+export default function Collection() {
+
+    /* SummaryRefs = [{repo: repo, collection: collection, filename: filename, lastModified: time}] */
+    // const summaryRefs = await ListSummaries()
+
+    const findPlotEntries = (collection, plotName)  => {
+
+        const tractEntries = collectionData['tracts']?.[plotName] ?? []
+        const visitEntries = collectionData['visits']?.[plotName] ?? []
+        const globalEntries = collectionData['global']?.[plotName] ?? []
+
+        return [tractEntries, visitEntries, globalEntries].flat()
+    }
+
+    const { repo: _repo, collection: _collection, plotName: _plotName } = useParams()
+
+    const repo = decodeURIComponent(_repo)
+    const collection = decodeURIComponent(_collection)
+    const plotName = decodeURIComponent(_plotName)
+
+    /*
+    const [ searchParams ] = useSearchParams()
+    const currentPage = parseInt(searchParams.get("page")) || 1
+    */
+
+    const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
+
+    useEffect(() => {fetch(`http://localhost:8000/api/v1/summaries/${_repo}/${_collection}`)
+        .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            return response.json()
+        })
+        .then(data => setCollectionData(data))
+        .catch((e) => {
+            console.log(e);
+      })
+    }, [])
+
+    const plotEntries = findPlotEntries(collectionData, plotName).sort((a,b) => DataIdSortFunc(JSON.parse(a.dataId), JSON.parse(b.dataId)))
+
+    const encodeDataId = (id) => {
+        return encodeURIComponent(id.trim())
+    }
+
+    /* We want the permalink on when in lightbox but off when in the general display, not sure how
+     * to do that yet */
+    const plotDisplays = plotEntries.map((entry, n) => 
+        ({dataId: JSON.parse(entry.dataId), plot: <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
+    )
+
+    return (
+        <div>
+            <div className="float-left">
+                <div className="text-m m-5"><Link to={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link></div>
+                <div className="text-2xl m-5">{collection}</div>
+                <div className="text-2xl m-5">{plotName}</div>
+            </div>
+            <div className="float-right">
+                {/*
+                <CompareCollectionButton baseURL={`${process.env.BASE_URL ?? ''}/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}`} collectionOptions={summaryRefs} />
+                */}
+            </div>
+            <div className="clear-both"></div>
+            <div className="">
+                <PlotPager plotEntries={plotDisplays}/>
+            </div>
+        </div>
+    )
+}
+
+

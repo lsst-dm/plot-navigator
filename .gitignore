@@ -3,6 +3,7 @@
 data/
 
 *.swp
+__pycache__/
 
 # dependencies
 /node_modules
