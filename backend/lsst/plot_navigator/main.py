@@ -32,7 +32,10 @@ app.include_router(images.router, prefix="/api/v1/images")
 app.include_router(cache.router, prefix="/api/v1/cache")
 
 # --- Static assets (JS, CSS, images from Vite build) ---
-DIST = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+if os.getenv("DIST_DIR"):
+    DIST = Path(os.getenv("DIST_DIR"))
+else:
+    DIST = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
 app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
 # --- SPA catch-all: any unmatched route serves index.html ---

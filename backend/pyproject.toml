@@ -35,6 +35,7 @@ make-test-butler = "lsst.plot_navigator.make_test_butler:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["lsst*"]
+namespaces = true
 
 [tool.setuptools_scm]
 fallback_version = "0.1.0"

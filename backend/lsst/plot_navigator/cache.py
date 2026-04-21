@@ -19,16 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import gzip
 import json
 import urllib.parse
 from uuid import uuid4
 
+from typing import TYPE_CHECKING
+
 import botocore
 import lsst.daf.butler as dafButler
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
-from mypy_boto3_s3 import S3Client
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
 
 router = APIRouter(tags=["cache"])
 
