@@ -7,6 +7,8 @@ import { useState, useEffect } from "react"
 import TruncatedText from '../components/TruncatedText'
 import TabNav from '../components/TabNav'
 
+import { apiFetch } from '../wrappers'
+
 export default function Collection() {
 
     const { collection: _collection, encodedRepo: _repo } = useParams()
@@ -15,7 +17,7 @@ export default function Collection() {
 
     const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
 
-    useEffect(() => {fetch(`http://localhost:8000/api/v1/summaries/${_repo}/${_collection}`)
+    useEffect(() => {apiFetch(`/api/v1/summaries/${_repo}/${_collection}`)
         .then((response) => {
             if (!response.ok) throw new Error(`HTTP ${r.status}`)
             return response.json()

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 
 import ListPager from '../components/listPager'
 
+import { apiFetch } from '../wrappers'
+
 export default function CollectionIndex() {
 
     /* SummaryRefs = [{repo: repo, collection: collection, filename: filename, lastModified: time}] */
@@ -12,7 +14,7 @@ export default function CollectionIndex() {
     */
     const [summaryRefs, setSummaryRefs] = useState([])
 
-    useEffect(() => {fetch(`http://localhost:8000/api/v1/summaries`)
+    useEffect(() => {apiFetch("/api/v1/summaries")
         .then((response) => {
             if (!response.ok) throw new Error(`HTTP ${r.status}`)
             return response.json()

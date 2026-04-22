@@ -6,11 +6,13 @@ import helpImg from "./help_18dp.svg"
 
 import { Tooltip } from 'react-tooltip';
 
+import { apiFetch } from '../wrappers'
+
 export async function putCollection(repo, collectionName, filterCollections = false) {
 
   const putBody = JSON.stringify({ repo: repo, collection: collectionName,
         filter_collections: filterCollections})
-  let res = await fetch("/api/v1/cache", {
+  let res = await apiFetch("/api/v1/cache", {
     method: "PUT",
     body: putBody,
     headers: { "Content-Type": "application/json" },
@@ -23,7 +25,7 @@ export async function putCollection(repo, collectionName, filterCollections = fa
 
 const pollJob = async (jobId) => {
   try {
-    const response = await fetch(`/api/v1/cache/job/${jobId}`)
+    const response = await apiFetch(`/api/v1/cache/job/${jobId}`)
     if (!response.ok) {
       return "Error getting job status."
     }

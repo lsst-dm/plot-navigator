@@ -3,6 +3,8 @@ import React from "react";
 import PlotMouseover from "./plotMouseover"
 import { useState, useEffect } from "react"
 
+import { apiFetch } from '../wrappers'
+
 export default function PlotDisplay({
   plotEntry,
   showDataId = true,
@@ -27,7 +29,7 @@ export default function PlotDisplay({
 
   const [pngMetadata, setPngMetadata] = useState({})
 
-  useEffect(() => {fetch( `/api/v1/images_md/${encodeURIComponent(repo)}/${uuid}`)
+  useEffect(() => {apiFetch( `/api/v1/images_md/${encodeURIComponent(repo)}/${uuid}`)
     .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${r.status}`)
         return response.json()
