@@ -48,9 +48,6 @@ async def serve_spa(full_path: str):
 
 app.include_router(base_router, prefix=(APP_PREFIX if APP_PREFIX else ""))
 
-for route in app.routes:
-    methods = ",".join(sorted(route.methods)) if hasattr(route, "methods") else "-"
-    print(f"{methods:20s} {route.path}")
 
 def serve():
     import uvicorn
