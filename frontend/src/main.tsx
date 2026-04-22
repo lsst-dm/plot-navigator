@@ -9,9 +9,11 @@ import Plot from "./pages/Plot"
 import AddCollection from "./pages/AddCollection"
 import RootLayout from "./layout"
 
+const baseurl = import.meta.env.BASE_URL.replace(/\/$/, "") || "/"
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={baseurl}>
       <Routes>
         <Route element={<RootLayout />} >
             <Route path="/" element={<CollectionIndex />} />
