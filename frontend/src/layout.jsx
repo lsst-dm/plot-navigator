@@ -20,9 +20,6 @@ export default function RootLayout() {
         <ul className="flex flex-row p-2">
           <li className="p-2 px-3 text-xl"><a href="/plot-navigator">Plots</a></li>
           <li className="p-2 px-3 text-xl"><a href="/plot-navigator/more">More Plots</a></li>
-          {(process.env.PAGE_LINKS ?? "").split(',').map((page) =>
-              <li className="p-2 px-3 text-xl" key={page}><a href={`/plot-navigator/${page.toLowerCase()}`}>{page}</a></li>
-          )}
         </ul>
       </div>
       <Outlet />
