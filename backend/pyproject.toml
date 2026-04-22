@@ -16,7 +16,7 @@ dependencies = [
     "pydantic-settings>=2",
     "lsst-daf-butler",
     "lsst-resources",
-    "arq",
+    "boto3",
 ]
 
 [project.optional-dependencies]

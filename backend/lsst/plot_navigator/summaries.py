@@ -19,13 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import gzip
 import json
 import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, HTTPException, Request
