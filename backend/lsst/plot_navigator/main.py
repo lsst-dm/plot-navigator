@@ -46,7 +46,7 @@ app.mount(f"{APP_PREFIX}/assets", StaticFiles(directory=DIST / "assets"), name="
 async def serve_spa(full_path: str):
     return FileResponse(DIST / "index.html")
 
-app.include_router(base_router, prefix=(APP_PREFIX if APP_PREFIX else "/"))
+app.include_router(base_router, prefix=(APP_PREFIX if APP_PREFIX else ""))
 
 for route in app.routes:
     methods = ",".join(sorted(route.methods)) if hasattr(route, "methods") else "-"
