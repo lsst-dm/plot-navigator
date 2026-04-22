@@ -2,6 +2,7 @@
 ARG PYTHON_VERSION="3.13"
 ARG DEBIAN_VERSION="trixie"
 ARG UV_VERSION="0.10"
+ARG BASE_URL="/plot_navigator"
 #ARG ASGI_PORT="8080"
 
 #==============================================================================
@@ -16,6 +17,9 @@ FROM astral/uv:${UV_VERSION} AS uv
 
 
 FROM node:25.9.0-alpine3.22 AS web-builder
+
+ARG BASE_URL
+ENV BASE_URL=${BASE_URL}
 
 WORKDIR /workdir/frontend
 COPY frontend/ .
