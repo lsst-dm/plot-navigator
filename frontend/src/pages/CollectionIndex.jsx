@@ -15,10 +15,6 @@ export default function CollectionIndex() {
     const [summaryRefs, setSummaryRefs] = useState([])
 
     useEffect(() => {apiFetch("/api/v1/summaries")
-        .then((response) => {
-            if (!response.ok) throw new Error(`HTTP ${r.status}`)
-            return response.json()
-        })
         .then(data => setSummaryRefs(data))
         .catch((e) => {
             console.log(e);

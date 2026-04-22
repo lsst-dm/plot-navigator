@@ -30,10 +30,6 @@ export default function PlotDisplay({
   const [pngMetadata, setPngMetadata] = useState({})
 
   useEffect(() => {apiFetch( `/api/v1/images_md/${encodeURIComponent(repo)}/${uuid}`)
-    .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${r.status}`)
-        return response.json()
-    })
     .then(data => setPngMetadata(data))
     .catch((e) => {
         console.log(e);

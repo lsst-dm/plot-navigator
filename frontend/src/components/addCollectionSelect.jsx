@@ -12,12 +12,11 @@ export async function putCollection(repo, collectionName, filterCollections = fa
 
   const putBody = JSON.stringify({ repo: repo, collection: collectionName,
         filter_collections: filterCollections})
-  let res = await apiFetch("/api/v1/cache", {
+  let data = await apiFetch("/api/v1/cache", {
     method: "PUT",
     body: putBody,
     headers: { "Content-Type": "application/json" },
   });
-  let data = await res.json();
   console.log(`putCollection result: ${JSON.stringify(data)}`);
 
   return data.jobId;
@@ -25,11 +24,7 @@ export async function putCollection(repo, collectionName, filterCollections = fa
 
 const pollJob = async (jobId) => {
   try {
-    const response = await apiFetch(`/api/v1/cache/job/${jobId}`)
-    if (!response.ok) {
-      return "Error getting job status."
-    }
-    return res.json()
+    return await apiFetch(`/api/v1/cache/job/${jobId}`)
   } catch (error) {
       return "Error getting job status."
   }
