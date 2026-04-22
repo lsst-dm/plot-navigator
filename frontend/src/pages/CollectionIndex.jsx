@@ -15,23 +15,31 @@ export default function CollectionIndex() {
     const [summaryRefs, setSummaryRefs] = useState([])
 
     useEffect(() => {apiFetch("/api/v1/summaries")
-        .then(data => setSummaryRefs(data))
+        .then(data => {
+            data.sort((a,b) => (b.lastModified - a.lastModified))
+            setSummaryRefs(data)
+        })
         .catch((e) => {
             console.log(e);
       })
     }, [])
 
-    summaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
 
     const userCollectionFilter = (ref) => {
         return ref.collection.startsWith("u") || ref.collection.startsWith("LSSTCam/calib") || ref.collection.startsWith("LATISS/calib")
     }
 
-    const officialSummaryRefs = summaryRefs.filter((ref) => ! userCollectionFilter(ref))
-    const userSummaryRefs = summaryRefs.filter((ref) => userCollectionFilter(ref))
+    const officialSummaryRefs  = () => {
+        return summaryRefs.filter((ref) => ! userCollectionFilter(ref))
+    }
+    const userSummaryRefs = () => {
+        return summaryRefs.filter((ref) => userCollectionFilter(ref))
+    }
 
+    /*
     officialSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
     userSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
+    */
 
     const decodeReportFilename = (filename) => {
         const uriEncodedCollection = filename.match("report_(.*).json.gz")[1]
@@ -53,12 +61,12 @@ export default function CollectionIndex() {
                     </div>
                 </div>
                 <div className="clear-both"></div>
-                <ListPager listEntries={officialSummaryRefs} />
+                <ListPager listEntries={officialSummaryRefs()} />
             </div>
 
             <h1 className="text-2xl m-5">User Collections</h1>
             <div className="m-5 inline-block">
-                <ListPager listEntries={userSummaryRefs} />
+                <ListPager listEntries={userSummaryRefs()} />
             </div>
 
         </div>
