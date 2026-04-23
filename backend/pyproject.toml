@@ -17,7 +17,8 @@ dependencies = [
     "lsst-daf-butler",
     "lsst-resources",
     "boto3",
-    "redis"
+    "redis",
+    "psycopg2-binary"
 ]
 
 [project.optional-dependencies]

@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 
 import { apiFetch } from '../wrappers'
 
+const baseurl = import.meta.env.BASE_URL ?? ""
+
 export default function PlotDisplay({
   plotEntry,
   showDataId = true,
@@ -29,7 +31,7 @@ export default function PlotDisplay({
 
   const [pngMetadata, setPngMetadata] = useState({})
 
-  useEffect(() => {apiFetch( `/api/v1/images_md/${encodeURIComponent(repo)}/${uuid}`)
+  useEffect(() => {apiFetch( `/api/v1/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`)
     .then(data => setPngMetadata(data))
     .catch((e) => {
         console.log(e);
@@ -62,14 +64,14 @@ export default function PlotDisplay({
       {uuid ? (
         <PlotMouseover
           key={uuid}
-          src={`/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
+          src={`${baseurl}/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
           label={region_label}
           regions={regions}
       />
       ) : (
         <img
           key={imgUrl}
-          src={`/images/path/${imgUrl}`}
+          src={`${baseurl}/images/path/${imgUrl}`}
         />
       )}
     </div>
