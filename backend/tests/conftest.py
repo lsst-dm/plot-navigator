@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from lsst.plot_navigator.app_factory import app_factory
 from lsst.plot_navigator.config import Settings, get_settings
-from lsst.plot_navigator.main import app
 from lsst.plot_navigator.make_test_butler import create_temp_butler, ingest_to_temp_butler
 
 
@@ -22,12 +22,14 @@ def test_butler():
 @pytest.fixture
 def local_test_settings() -> Settings:
     return Settings(
+        _env_file=None,
         enable_test_images=True,
         butler_repo_names=["testing_butler"],
     )
 
 @pytest.fixture
 def client(local_test_settings: Settings) -> Iterator[TestClient]:
+    app = app_factory(local_test_settings)
     app.dependency_overrides[get_settings] = lambda: local_test_settings
     with TestClient(app) as c:
         yield c

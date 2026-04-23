@@ -16,9 +16,10 @@ export default function Collection() {
     const repo = decodeURIComponent(_repo)
 
     const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
+    const [plotCounts, setPlotCounts] = useState({})
 
-    useEffect(() => {apiFetch(`/api/v1/summaries/${_repo}/${_collection}`)
-        .then(data => setCollectionData(data))
+    useEffect(() => {apiFetch(`/api/v1/summaries/collection/${_repo}/${_collection}`)
+        .then(data => setPlotCounts(data))
         .catch((e) => {
             console.log(e);
       })
@@ -130,10 +131,10 @@ export default function Collection() {
                             <tr><td>Plot Type</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {plotKeys.map((plot, n) =>
+                        {plotCounts.map((plot, n) =>
                             <tr key={n}>
                             <td className="p-1"><Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
-                            <td className="p-1 text-right">{plotEntries[plot].count}</td></tr>
+                            <td className="p-1 text-right">{plotCounts[plot]}</td></tr>
                         )}
                         </tbody>
                         </table>

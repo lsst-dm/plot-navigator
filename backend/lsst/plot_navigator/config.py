@@ -20,8 +20,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from functools import lru_cache
+from typing import Annotated
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -31,9 +33,16 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
+    app_prefix: str = ""
+    butler_repo_names: Annotated[list[str], NoDecode] = []
     enable_test_images: bool = False
-    butler_repo_names: list[str] = []
-    # Add other config as it accrues: s3_bucket, log_level, etc.
+
+    @field_validator("butler_repo_names", mode="before", check_fields=True)
+    def split_comma_separated(cls, v: object) -> object:
+        """Use a comma separated list for the names of repos."""
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
 
 
 @lru_cache
