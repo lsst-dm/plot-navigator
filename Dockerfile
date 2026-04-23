@@ -2,7 +2,7 @@
 ARG PYTHON_VERSION="3.13"
 ARG DEBIAN_VERSION="trixie"
 ARG UV_VERSION="0.10"
-ARG APP_PREFIX="/plot-navigator/"
+ARG APP_PREFIX="/plot-navigator"
 #ARG ASGI_PORT="8080"
 
 #==============================================================================

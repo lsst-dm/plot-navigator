@@ -16,7 +16,7 @@ export default function CollectionIndex() {
 
     useEffect(() => {apiFetch("/api/v1/summaries")
         .then(data => {
-            data.sort((a,b) => (b.lastModified - a.lastModified))
+            data.sort((a,b) => (new Date(b.lastModified) - new Date(a.lastModified)))
             setSummaryRefs(data)
         })
         .catch((e) => {
@@ -35,11 +35,6 @@ export default function CollectionIndex() {
     const userSummaryRefs = () => {
         return summaryRefs.filter((ref) => userCollectionFilter(ref))
     }
-
-    /*
-    officialSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
-    userSummaryRefs.sort((a,b) => (b.lastModified - a.lastModified))
-    */
 
     const decodeReportFilename = (filename) => {
         const uriEncodedCollection = filename.match("report_(.*).json.gz")[1]

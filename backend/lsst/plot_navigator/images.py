@@ -53,6 +53,9 @@ def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]
 
     butler = get_butler(repo)
     dataset_ref = butler.get_dataset(DatasetId(uuid))
+    if not dataset_ref:
+        raise HTTPException(status_code=404, detail="No dataset found")
+
     resource_path = ResourcePath(butler.getURI(dataset_ref))
 
     if dataset_ref.datasetType.storageClass_name != "Plot":

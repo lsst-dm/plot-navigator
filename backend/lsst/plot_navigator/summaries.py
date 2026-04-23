@@ -115,11 +115,12 @@ def _list_summaries_filesystem(repo_name: str) -> list[SummaryEntry]:
             match = re.fullmatch(r"collection_(.*?)\.json\.gz", filename.name)
             if match:
                 collection = unquote(match.group(1))
+                mtime = datetime.fromtimestamp(os.path.getmtime(filename))
                 entries.append(SummaryEntry(
                     repo=repo_name,
                     collection=collection,
                     filename=filename.name,
-                    lastModified=datetime(2025, 3, 10, 2, 30),
+                    lastModified=mtime,
                 ))
     except FileNotFoundError:
         pass
@@ -157,14 +158,11 @@ def _get_summary_filesystem(repo_name: str, collection_name: str) -> dict:
 # ---------------------------------------------------------------------------
 
 @router.get("", response_model=list[SummaryEntry])
-def list_summaries(request: Request, repo: Optional[str] = None) -> list[SummaryEntry]:
+def list_summaries(request: Request) -> list[SummaryEntry]:
     """
     List available collection summaries.
-    Optionally filter to a single repo with ?repo=<name>.
-    When no repo is specified, all repos from REPO_URLS are queried.
     """
-    repo_urls = get_repo_urls()
-    repos = [repo] if repo else list(repo_urls.keys())
+    repos = os.getenv("BUTLER_REPO_NAMES","").split(",")
 
     results: list[SummaryEntry] = []
 
