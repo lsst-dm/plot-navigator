@@ -19,7 +19,6 @@ async def lifespan(app: FastAPI):
         password=os.getenv("REDIS_PASSWORD"),
     )
 
-    # Could set profile_name="rubin-plot-navigator" here
     session = boto3.Session()
     app.state.s3_client = session.client("s3", endpoint_url=os.getenv("S3_ENDPOINT_URL"))
     yield

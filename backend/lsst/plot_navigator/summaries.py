@@ -43,10 +43,6 @@ async def ping():
     return {"status": "ok"}
 
 BUCKET_NAME = os.getenv("BUCKET_NAME", "")
-BUCKET_URL = os.getenv("BUCKET_URL", "")
-S3_KEY = os.getenv("S3_KEY", "")
-S3_SECRET = os.getenv("S3_SECRET", "")
-S3_REGION = "s3dfrgw"
 ENABLE_TEST_IMAGES = os.getenv("ENABLE_TEST_IMAGES", "").lower() in ("1", "true", "yes")
 TEST_ASSETS_DIR = Path("test_assets/summaries")
 
@@ -182,12 +178,14 @@ def list_summaries(request: Request, repo: Optional[str] = None) -> list[Summary
     return results
 
 
-@router.get("/{repo:path}/{collection}", response_model=dict)
+@router.get("/{repo}/{collection:path}", response_model=dict)
 def get_summary(repo: str, collection: str, request: Request) -> dict:
     """
     Fetch the summary JSON for a specific repo + collection.
     The repo segment may contain slashes (e.g. embargo/main).
     """
+
+    print(f"get_summary: {collection}")
     if not ENABLE_TEST_IMAGES:
         data = _get_summary_s3(repo, collection, request.app.state.s3_client)
     else:

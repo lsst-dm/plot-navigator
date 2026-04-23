@@ -64,8 +64,8 @@ def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]
     return resource_path, image
 
 
-@router.get("/uuid/{repo:path}/{uuid}")
-@router.head("/uuid/{repo:path}/{uuid}")
+@router.get("/uuid/{repo}/{uuid}")
+@router.head("/uuid/{repo}/{uuid}")
 async def get_image(repo: str, uuid: str) -> Response:
     """
     Retrieve a Plot image by repo and UUID.
@@ -96,7 +96,7 @@ class ImageMetadata(BaseModel):
     boxes: Optional[str] = None
 
 
-@router.get("/uuid_md/{repo:path}/{uuid}", response_model=ImageMetadata)
+@router.get("/uuid_md/{repo}/{uuid}", response_model=ImageMetadata)
 async def get_metadata(repo: str, uuid: str) -> ImageMetadata:
     """
     Retrieve PNG metadata (label and box annotations) for a Plot dataset.
