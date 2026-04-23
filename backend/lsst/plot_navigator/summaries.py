@@ -25,13 +25,17 @@ import gzip
 import json
 import os
 import re
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import quote, unquote
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
+
+from .config import Settings, get_settings
+from .data_model import CollectionSummaryFile, PlotItem
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -43,40 +47,31 @@ async def ping():
     return {"status": "ok"}
 
 BUCKET_NAME = os.getenv("BUCKET_NAME", "")
-ENABLE_TEST_IMAGES = os.getenv("ENABLE_TEST_IMAGES", "").lower() in ("1", "true", "yes")
 TEST_ASSETS_DIR = Path("test_assets/summaries")
-
-_repo_urls: dict[str, str] | None = None
-
-
-def get_repo_urls() -> dict[str, str]:
-    global _repo_urls
-    if _repo_urls is None:
-        try:
-            _repo_urls = json.loads(os.getenv("REPO_URLS", "{}"))
-        except Exception as err:
-            print(f"Could not parse REPO_URLS env var: {err}")
-            _repo_urls = {}
-    return _repo_urls
-
 
 # ---------------------------------------------------------------------------
 # Pydantic response models
 # ---------------------------------------------------------------------------
 
-class SummaryEntry(BaseModel):
+class SummaryHeader(BaseModel):
     repo: str
     collection: str
     filename: str
     lastModified: datetime
+
+class CollectionSummary(BaseModel):
+    plot_counts: dict[str, int]
+    tract_counts: dict[int, int]
+    visit_counts: dict[int, int]
+
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers — S3 and filesystem variants mirror the JS originals
 # ---------------------------------------------------------------------------
 
-def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryEntry]:
-    entries: list[SummaryEntry] = []
+def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryHeader]:
+    entries: list[SummaryHeader] = []
     prefix = f"{quote(repo_name, safe='')}/"
     continuation_token: Optional[str] = None
 
@@ -92,7 +87,7 @@ def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryEntry]:
             match = re.search(r"collection_(.*?)\.json\.gz$", key)
             if match:
                 collection = unquote(match.group(1))
-                entries.append(SummaryEntry(
+                entries.append(SummaryHeader(
                     repo=repo_name,
                     collection=collection,
                     filename=key,
@@ -106,9 +101,9 @@ def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryEntry]:
     return entries
 
 
-def _list_summaries_filesystem(repo_name: str) -> list[SummaryEntry]:
+def _list_summaries_filesystem(repo_name: str) -> list[SummaryHeader]:
     repo_dir = TEST_ASSETS_DIR / quote(repo_name, safe="")
-    entries: list[SummaryEntry] = []
+    entries: list[SummaryHeader] = []
 
     try:
         for filename in repo_dir.iterdir():
@@ -116,7 +111,7 @@ def _list_summaries_filesystem(repo_name: str) -> list[SummaryEntry]:
             if match:
                 collection = unquote(match.group(1))
                 mtime = datetime.fromtimestamp(os.path.getmtime(filename))
-                entries.append(SummaryEntry(
+                entries.append(SummaryHeader(
                     repo=repo_name,
                     collection=collection,
                     filename=filename.name,
@@ -128,26 +123,26 @@ def _list_summaries_filesystem(repo_name: str) -> list[SummaryEntry]:
     return entries
 
 
-def _get_summary_s3(repo_name: str, collection_name: str, client: S3Client) -> dict:
+def _get_summary_s3(repo_name: str, collection_name: str, client: S3Client) -> CollectionSummaryFile:
     key = f"{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
 
     try:
         response = client.get_object(Bucket=BUCKET_NAME, Key=key)
         gz_data = response["Body"].read()
-        return json.loads(gzip.decompress(gz_data))
+        return CollectionSummaryFile.model_validate_json(gzip.decompress(gz_data))
     except Exception as err:
         print(f"S3 error fetching summary: {err}")
         return {}
 
 
-def _get_summary_filesystem(repo_name: str, collection_name: str) -> dict:
+def _get_summary_filesystem(repo_name: str, collection_name: str) -> CollectionSummaryFile:
     path = (
         TEST_ASSETS_DIR
         / quote(repo_name, safe="")
         / f"collection_{quote(collection_name, safe='')}.json.gz"
     )
     try:
-        return json.loads(gzip.decompress(path.read_bytes()))
+        return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
     except Exception as err:
         print(f"Filesystem error fetching summary: {err}")
         return {}
@@ -157,34 +152,36 @@ def _get_summary_filesystem(repo_name: str, collection_name: str) -> dict:
 # Routes
 # ---------------------------------------------------------------------------
 
-@router.get("", response_model=list[SummaryEntry])
-def list_summaries(request: Request) -> list[SummaryEntry]:
+@router.get("")
+def list_summaries(request: Request,
+                   settings: Settings = Depends(get_settings)) -> list[SummaryHeader]:
     """
     List available collection summaries.
     """
-    repos = os.getenv("BUTLER_REPO_NAMES","").split(",")
 
-    results: list[SummaryEntry] = []
+    results: list[SummaryHeader] = []
 
-    if not ENABLE_TEST_IMAGES:
-        for repo_name in repos:
+    if not settings.enable_test_images:
+        for repo_name in settings.butler_repo_names:
             results.extend(_list_summaries_s3(repo_name, request.app.state.s3_client))
     else:
-        for repo_name in repos:
+        for repo_name in settings.butler_repo_names:
             results.extend(_list_summaries_filesystem(repo_name))
 
     return results
 
 
-@router.get("/{repo}/{collection:path}", response_model=dict)
-def get_summary(repo: str, collection: str, request: Request) -> dict:
+@router.get("/collection/{repo}/{collection:path}")
+def get_summary(repo: str,
+                collection: str,
+                request: Request,
+                settings: Settings = Depends(get_settings)) -> CollectionSummary:
     """
     Fetch the summary JSON for a specific repo + collection.
     The repo segment may contain slashes (e.g. embargo/main).
     """
 
-    print(f"get_summary: {collection}")
-    if not ENABLE_TEST_IMAGES:
+    if not settings.enable_test_images:
         data = _get_summary_s3(repo, collection, request.app.state.s3_client)
     else:
         data = _get_summary_filesystem(repo, collection)
@@ -192,4 +189,58 @@ def get_summary(repo: str, collection: str, request: Request) -> dict:
     if not data:
         raise HTTPException(status_code=404, detail="Summary not found")
 
-    return data
+    plot_counts: dict[str, int] = defaultdict(int)
+    tract_counts: dict[int, int] = defaultdict(int)
+    visit_counts: dict[int, int] = defaultdict(int)
+
+    # .visits is a dict of [plot type, [{dataid, id}]]
+    for entry in [data.visits, data.tracts, data.global_]:
+        for plot_type, plot_refs in entry.items():
+            plot_counts[plot_type] += len(plot_refs)
+
+            for plot_ref in plot_refs:
+                dataId = json.loads(plot_ref.dataId)
+                if 'tract' in dataId:
+                    tract_counts[int(dataId['tract'])] += 1
+                if 'visit' in dataId:
+                    visit_counts[int(dataId['visit'])] += 1
+
+    return CollectionSummary(plot_counts=plot_counts,
+                             tract_counts=tract_counts,
+                             visit_counts=visit_counts)
+
+
+# TODO:
+#
+# - Turn get_summary into just the plot names+counts, and/or tracts + counts
+# - summaries/plot/{plot_type}/{repo}/{collection:path}
+# - summaries/tract/{tract}/{repo}/{collection:path}
+# - summaries/visit/{visit}/{repo}/{collection:path}
+# @router.get("//{repo}/{collection:path}")
+
+@router.get("/plot/{plot}/{repo}/{collection:path}")
+def get_plot_items(plot: str,
+                   repo: str,
+                   collection: str,
+                   request: Request,
+                   settings: Settings = Depends(get_settings)) -> list[PlotItem]:
+
+    if not settings.enable_test_images:
+        summary = _get_summary_s3(repo, collection, request.app.state.s3_client)
+    else:
+        summary = _get_summary_filesystem(repo, collection)
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="Collection summary not found")
+
+    if plot in summary.visits:
+        entries: list[PlotItem] = summary.visits[plot]
+    elif plot in summary.tracts:
+        entries: list[PlotItem] = summary.tracts[plot]
+    elif plot in summary.global_:
+        entries: list[PlotItem] = summary.global_[plot]
+    else:
+        raise HTTPException(status_code=404, detail="Plot not found")
+
+    return entries
+
