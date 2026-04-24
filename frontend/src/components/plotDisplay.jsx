@@ -63,7 +63,7 @@ export default function PlotDisplay({
       )}
       {uuid ? (
         <PlotMouseover
-          key={uuid}
+          imgkey={uuid}
           src={`${baseurl}/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
           label={region_label}
           regions={regions}

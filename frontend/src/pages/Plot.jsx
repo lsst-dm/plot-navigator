@@ -10,23 +10,9 @@ import PlotDisplay from '../components/plotDisplay'
 import CompareCollectionButton from '../components/compareCollectionButton'
 import { DataIdSortFunc } from '../components/dataIdFuncs'
 
-// import {ListSummaries } from '@/lib/summaries'
-
 import { apiFetch } from '../wrappers'
 
-export default function Collection() {
-
-    /* SummaryRefs = [{repo: repo, collection: collection, filename: filename, lastModified: time}] */
-    // const summaryRefs = await ListSummaries()
-
-    const findPlotEntries = (collection, plotName)  => {
-
-        const tractEntries = collectionData['tracts']?.[plotName] ?? []
-        const visitEntries = collectionData['visits']?.[plotName] ?? []
-        const globalEntries = collectionData['global']?.[plotName] ?? []
-
-        return [tractEntries, visitEntries, globalEntries].flat()
-    }
+export default function Plot() {
 
     const { repo: _repo, collection: _collection, plotName: _plotName } = useParams()
 
@@ -39,16 +25,19 @@ export default function Collection() {
     const currentPage = parseInt(searchParams.get("page")) || 1
     */
 
-    const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
+    const [plotList, setPlotList] = useState([])
 
-    useEffect(() => {apiFetch(`/api/v1/summaries/${_repo}/${_collection}`)
-        .then(data => setCollectionData(data))
+    useEffect(() => {apiFetch(`/api/v1/summaries/plot/${plotName}/${_repo}/${_collection}`)
+        .then(data => {
+            data.sort((a,b) => DataIdSortFunc(JSON.parse(a.dataId), JSON.parse(b.dataId)))
+            console.log(JSON.stringify(data))
+            setPlotList(data)
+        })
         .catch((e) => {
             console.log(e);
       })
-    }, [])
+    }, [plotName, _repo, _collection])
 
-    const plotEntries = findPlotEntries(collectionData, plotName).sort((a,b) => DataIdSortFunc(JSON.parse(a.dataId), JSON.parse(b.dataId)))
 
     const encodeDataId = (id) => {
         return encodeURIComponent(id.trim())
@@ -56,9 +45,12 @@ export default function Collection() {
 
     /* We want the permalink on when in lightbox but off when in the general display, not sure how
      * to do that yet */
-    const plotDisplays = plotEntries.map((entry, n) => 
-        ({dataId: JSON.parse(entry.dataId), plot: <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
-        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
+    const plotDisplays = plotList.map((entry, n) =>
+        ({dataId: JSON.parse(entry.dataId),
+            plotFn: () => (
+            <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+        permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />
+        )})
     )
 
     return (

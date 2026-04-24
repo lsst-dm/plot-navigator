@@ -35,7 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
-from .data_model import CollectionSummaryFile, PlotItem
+from .data_model import CollectionSummaryFile, PlotItem, NamedPlotItem, PlotCollection
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -243,4 +243,32 @@ def get_plot_items(plot: str,
         raise HTTPException(status_code=404, detail="Plot not found")
 
     return entries
+
+@router.get("/tract/{tract}/{repo}/{collection:path}")
+def get_tract_items(tract: int,
+                   repo: str,
+                   collection: str,
+                   request: Request,
+                   settings: Settings = Depends(get_settings)) -> list[NamedPlotItem]:
+
+    if not settings.enable_test_images:
+        summary = _get_summary_s3(repo, collection, request.app.state.s3_client)
+    else:
+        summary = _get_summary_filesystem(repo, collection)
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="Collection summary not found")
+
+    output = []
+
+    data_sources: list[PlotCollection] = [summary.visits, summary.tracts, summary.global_]
+
+    for data_source in data_sources:
+        for plot_name, plot_list in data_source.items():
+            for plot in plot_list:
+                dataId = json.loads(plot.dataId)
+                if dataId.get('tract') == tract:
+                    output.append(NamedPlotItem(name=plot_name, dataId=plot.dataId, id=plot.id))
+
+    return output
 

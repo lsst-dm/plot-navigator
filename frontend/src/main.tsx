@@ -6,6 +6,7 @@ import './index.css'
 import CollectionIndex from "./pages/CollectionIndex"
 import Collection from "./pages/Collection"
 import Plot from "./pages/Plot"
+import Tract from "./pages/Tract"
 import AddCollection from "./pages/AddCollection"
 import RootLayout from "./layout"
 
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/collection/:encodedRepo/:collection" element={<Collection />} />
 
             <Route path="/plot/:repo/:collection/:plotName" element={<Plot />} />
+            <Route path="/tract/:repo/:collection/:tract" element={<Tract />} />
 
             <Route path="/addcollection" element={<AddCollection />} />
         </Route>

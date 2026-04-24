@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
 
-export default function PlotMouseover({src, key, regions, label}) {
+export default function PlotMouseover({src, imgkey, regions, label}) {
 
     /*
      * To display metric values on mouse-over, this component expects to receive a regions paramter
@@ -37,7 +37,7 @@ export default function PlotMouseover({src, key, regions, label}) {
     return (
         <div >
             <div onMouseMove={mouseMove}>
-                <img key={key} src={src} ref={childRef} />
+                <img key={imgkey} src={src} ref={childRef} />
             </div>
             <div>{displayString}</div>
         </div>

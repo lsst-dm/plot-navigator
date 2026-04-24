@@ -19,14 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import json
-from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, RootModel
+from pydantic import BaseModel, Field, RootModel
 
 
 class PlotItem(BaseModel):
-    """A single plot item with its data id and UUID."""
+    """A single plot reference with a data id and UUID."""
+    dataId: str
+    id: str
+
+class NamedPlotItem(BaseModel):
+    """A single plot with its name, data id and UUID."""
+    name: str
     dataId: str
     id: str
 

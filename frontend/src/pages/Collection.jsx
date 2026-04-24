@@ -17,77 +17,19 @@ export default function Collection() {
 
     const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
     const [plotCounts, setPlotCounts] = useState({})
+    const [tractCounts, setTractCounts] = useState({})
+    const [visitCounts, setVisitCounts] = useState({})
 
     useEffect(() => {apiFetch(`/api/v1/summaries/collection/${_repo}/${_collection}`)
-        .then(data => setPlotCounts(data))
+        .then(data => {
+            setPlotCounts(data.plot_counts)
+            setTractCounts(data.tract_counts)
+            setVisitCounts(data.visit_counts)
+        })
         .catch((e) => {
             console.log(e);
       })
-    }, [])
-
-
-    var tractEntries = {}
-    Object.entries(collectionData['tracts']).forEach(([plot, plotIdList]) =>  {
-        plotIdList.forEach((listEntry) => {
-            const tract = JSON.parse(listEntry['dataId'])['tract']
-            if(tractEntries[tract]) {
-                tractEntries[tract] = 1 + tractEntries[tract]
-            } else {
-                tractEntries[tract] = 1
-            }
-        })
-    })
-    const tractInts = Object.keys(tractEntries).map(x => parseInt(x))
-    tractInts.sort((a,b) => a - b)
-    const tractKeys = tractInts.map(x => x.toString())
-
-    const classifyDataId = (dataId) => {
-        if('tract' in dataId) {
-            return 'tract'
-        } else if('visit' in dataId) {
-            return 'visit'
-        } else {
-            return 'global'
-        }
-    }
-
-    var plotEntries = {}
-    const allCollectionEntries = [...Object.entries(collectionData['tracts']),
-        ...Object.entries(collectionData['visits']),
-        ...Object.entries(collectionData['global'])]
-    allCollectionEntries.forEach(([plot, plotIdList]) =>  {
-
-        plotEntries[plot] = {category: classifyDataId(plotIdList[0]), count: plotIdList.length}
-    })
-
-    const plotKeys = Object.keys(plotEntries)
-    plotKeys.sort()
-
-    var visitEntries = {}
-    Object.entries(collectionData['visits']).forEach(([plot, plotIdList]) =>  {
-        plotIdList.forEach((listEntry) => {
-            const visit = JSON.parse(listEntry['dataId'])['visit']
-            visitEntries[visit] = visitEntries[visit] ?  visitEntries[visit] + 1 : 1
-        })
-    })
-    const visitInts = Object.keys(visitEntries).map(x => parseInt(x))
-    visitInts.sort((a,b) => a - b)
-    const visitKeys = visitInts.map(x => x.toString())
-
-
-    var globalEntries = {}
-    Object.entries(collectionData['global']).forEach(([plot, plotIdList]) =>  {
-
-        plotIdList.forEach((listEntry) => {
-            if(globalEntries[plot]) {
-                globalEntries[plot] = 1 + globalEntries[plot]
-            } else {
-                globalEntries[plot] = 1
-            }
-
-        })
-    })
-
+    }, [_repo, _collection])
 
     const selByDataId = (
                 <div className="">
@@ -97,10 +39,10 @@ export default function Collection() {
                             <tr><td>Tract</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {tractKeys.map((tract, n) =>
+                        {Object.keys(tractCounts).map((tract, n) =>
                             <tr key={n}>
                             <td className="p-1"><Link to={`/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${tract}`}>{tract}</Link></td>
-                            <td className="p-1 text-right">{tractEntries[tract]}</td></tr>
+                            <td className="p-1 text-right">{tractCounts[tract]}</td></tr>
                         )}
                         </tbody>
                         </table>
@@ -112,10 +54,10 @@ export default function Collection() {
                             <tr><td>Visit</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {visitKeys.map((visit, n) =>
+                        {Object.keys(visitCounts).map((visit, n) =>
                             <tr key={n}>
                             <td className="p-1"><Link to={`/visit/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${visit}`}>{visit}</Link></td>
-                            <td className="p-1 text-right">{visitEntries[visit]}</td></tr>
+                            <td className="p-1 text-right">{visitCounts[visit]}</td></tr>
                         )}
                         </tbody>
                         </table>
@@ -131,10 +73,11 @@ export default function Collection() {
                             <tr><td>Plot Type</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {plotCounts.map((plot, n) =>
+                        {Object.keys(plotCounts).map((plot, n) =>
                             <tr key={n}>
-                            <td className="p-1"><Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
-                            <td className="p-1 text-right">{plotCounts[plot]}</td></tr>
+                                <td className="p-1"><Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
+                                <td className="p-1 text-right">{plotCounts[plot]}</td>
+                            </tr>
                         )}
                         </tbody>
                         </table>

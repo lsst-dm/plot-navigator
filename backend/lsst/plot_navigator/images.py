@@ -21,20 +21,19 @@
 
 
 import io
-import os
-from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
+from lsst.daf.butler import Butler, DatasetId
+from lsst.resources import ResourcePath
 from PIL import Image
 from pydantic import BaseModel
 
-from lsst.daf.butler import Butler, DatasetId
-from lsst.resources import ResourcePath
+from .config import Settings, get_settings
 
 router = APIRouter(tags=["images"])
 
-REPO_NAMES = os.getenv("BUTLER_REPO_NAMES", "").split(",")
+# REPO_NAMES = os.getenv("BUTLER_REPO_NAMES", "").split(",")
 
 butler_map: dict[str, Butler] = {}
 
@@ -48,8 +47,6 @@ def get_butler(repo: str) -> Butler:
 
 def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]:
     """Shared validation logic: checks repo, fetches dataset, opens image."""
-    if repo not in REPO_NAMES:
-        raise HTTPException(status_code=400, detail=f"Invalid repo {repo}")
 
     butler = get_butler(repo)
     dataset_ref = butler.get_dataset(DatasetId(uuid))
@@ -69,12 +66,14 @@ def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]
 
 @router.get("/uuid/{repo}/{uuid}")
 @router.head("/uuid/{repo}/{uuid}")
-async def get_image(repo: str, uuid: str) -> Response:
+async def get_image(repo: str, uuid: str, settings: Settings = Depends(get_settings)) -> Response:
     """
     Retrieve a Plot image by repo and UUID.
     Responds to both GET and HEAD; sets Has-Metadata header if the PNG
     contains box annotations.
     """
+    if repo not in settings.butler_repo_names:
+        raise HTTPException(status_code=400, detail=f"Invalid repo {repo}")
     resource_path, image = _validate_and_load(repo, uuid)
 
     headers = {}
@@ -95,15 +94,20 @@ async def get_image(repo: str, uuid: str) -> Response:
 
 
 class ImageMetadata(BaseModel):
-    label: Optional[str] = None
-    boxes: Optional[str] = None
+    label: str | None = None
+    boxes: str | None = None
 
 
-@router.get("/uuid_md/{repo}/{uuid}", response_model=ImageMetadata)
-async def get_metadata(repo: str, uuid: str) -> ImageMetadata:
+@router.get("/uuid_md/{repo}/{uuid}")
+async def get_metadata(repo: str,
+                       uuid: str,
+                       settings: Settings = Depends(get_settings)) -> ImageMetadata:
     """
     Retrieve PNG metadata (label and box annotations) for a Plot dataset.
     """
+    if repo not in settings.butler_repo_names:
+        raise HTTPException(status_code=400, detail=f"Invalid repo {repo}")
+
     _, image = _validate_and_load(repo, uuid)
 
     return ImageMetadata(

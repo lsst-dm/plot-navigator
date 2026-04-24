@@ -26,7 +26,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
       )
       .map((entry, n) => ({
         dataId: entry.dataId,
-        plot: entry.plot,
+        plotFn: entry.plotFn,
         index: n,
       }))
   );
@@ -162,7 +162,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
             className=" w-[28rem] p-1 m-0"
             onClick={() => showLightboxEntry(indexedEntry.index)}
           >
-            {indexedEntry.plot}
+            {indexedEntry.plotFn()}
           </div>
         ))}
       </div>
@@ -186,7 +186,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
           </div>
           <div className="w-2/3 float-left bg-white" onClick={doNothing}>
             <div className="[&_img]:[max-height:75vh]">
-              {filteredEntries[displayedEntry].plot}
+              {filteredEntries[displayedEntry].plotFn()}
             </div>
           </div>
           <div className="w-1/6 float-left">

@@ -15,7 +15,6 @@ export default function TabNav({ panes }) {
   const buttons = panes.map((pane, n) => (
     <Link
       replace
-      scroll={false}
       key={n}
       to={`?t=${n}`}
       onClick={() => setCurrentPane(n)}
