@@ -23,8 +23,10 @@ from __future__ import annotations
 
 import gzip
 import json
+import logging
 import os
 import re
+import time
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -35,10 +37,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
-from .data_model import CollectionSummaryFile, PlotItem, NamedPlotItem, PlotCollection
+from .data_model import CollectionSummaryFile, NamedPlotItem, PlotCollection, PlotItem
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
+
+logger = logging.getLogger("api.summaries")
 
 router = APIRouter(prefix="", tags=["summaries"])
 
@@ -75,6 +79,7 @@ def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryHeader]:
     prefix = f"{quote(repo_name, safe='')}/"
     continuation_token: Optional[str] = None
 
+    start = time.perf_counter()
     while True:
         kwargs: dict = {"Bucket": BUCKET_NAME, "Prefix": prefix}
         if continuation_token:
@@ -97,6 +102,9 @@ def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryHeader]:
         if not response.get("IsTruncated"):
             break
         continuation_token = response.get("NextContinuationToken")
+
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.info(f"_list_summaries duration: {duration_ms:.2f} ms")
 
     return entries
 
@@ -127,11 +135,15 @@ def _get_summary_s3(repo_name: str, collection_name: str, client: S3Client) -> C
     key = f"{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
 
     try:
+        start = time.perf_counter()
         response = client.get_object(Bucket=BUCKET_NAME, Key=key)
         gz_data = response["Body"].read()
-        return CollectionSummaryFile.model_validate_json(gzip.decompress(gz_data))
+        result = CollectionSummaryFile.model_validate_json(gzip.decompress(gz_data))
+        duration_ms = (time.perf_counter() - start) * 1000
+        logger.info(f"_get_summary_s3 duration: {duration_ms:.2f} ms")
+        return result
     except Exception as err:
-        print(f"S3 error fetching summary: {err}")
+        logger.error(f"S3 error fetching summary: {err}")
         return {}
 
 
@@ -144,7 +156,7 @@ def _get_summary_filesystem(repo_name: str, collection_name: str) -> CollectionS
     try:
         return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
     except Exception as err:
-        print(f"Filesystem error fetching summary: {err}")
+        logger.error(f"Filesystem error fetching summary: {err}")
         return {}
 
 

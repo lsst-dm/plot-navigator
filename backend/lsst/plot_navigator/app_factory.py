@@ -20,22 +20,27 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import boto3
 import redis
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import cache, images, summaries
 from .config import Settings, get_settings
 
+logger = logging.getLogger("api.middleware")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logging.basicConfig(level=logging.INFO, force=True)
 
     app.state.redis = redis.Redis(
         host=os.getenv("REDIS_HOST", "localhost"),
@@ -47,6 +52,7 @@ async def lifespan(app: FastAPI):
     app.state.s3_client = session.client("s3", endpoint_url=os.getenv("S3_ENDPOINT_URL"))
     yield
     app.state.redis.close()
+
 
 
 def app_factory(settings: Settings | None = None) -> FastAPI:
@@ -74,5 +80,26 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
         return FileResponse(DIST / "index.html")
 
     app.include_router(base_router, prefix=settings.app_prefix)
+
+    @app.middleware("http")
+    async def log_request_time(request: Request, call_next):
+        start = time.perf_counter()
+        response = await call_next(request)
+        duration_ms = (time.perf_counter() - start) * 1000
+
+        logger.info(
+            "request_timing path: %s, duration: %.2f ms",
+            request.url.path,
+            duration_ms,
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "route": request.scope.get("route").path if request.scope.get("route") else request.url.path,
+                "status": response.status_code,
+                "duration_ms": duration_ms,
+            },
+        )
+        response.headers["X-Process-Time-ms"] = f"{duration_ms:.2f}"
+        return response
 
     return app
