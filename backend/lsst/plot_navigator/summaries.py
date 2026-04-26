@@ -138,9 +138,11 @@ def _get_summary_s3(repo_name: str, collection_name: str, client: S3Client) -> C
         start = time.perf_counter()
         response = client.get_object(Bucket=BUCKET_NAME, Key=key)
         gz_data = response["Body"].read()
-        result = CollectionSummaryFile.model_validate_json(gzip.decompress(gz_data))
+        text_data = gzip.decompress(gz_data)
+        result = CollectionSummaryFile.model_validate_json(text_data)
         duration_ms = (time.perf_counter() - start) * 1000
-        logger.info(f"_get_summary_s3 duration: {duration_ms:.2f} ms")
+        logger.info(f"_get_summary_s3 compressed: {len(gz_data):d} bytes, "
+                     f"uncompressed: {len(text_data):d} bytes, duration: {duration_ms:.2f} ms")
         return result
     except Exception as err:
         logger.error(f"S3 error fetching summary: {err}")
