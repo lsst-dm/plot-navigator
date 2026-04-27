@@ -32,7 +32,7 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import cache, images, summaries
+from . import cache, images, repos, summaries
 from .config import Settings, get_settings
 
 logger = logging.getLogger("api.middleware")
@@ -65,6 +65,7 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
     app.include_router(summaries.router, prefix=f"{settings.app_prefix}/api/v1/summaries")
     app.include_router(images.router, prefix=f"{settings.app_prefix}/api/v1/images")
     app.include_router(cache.router, prefix=f"{settings.app_prefix}/api/v1/cache")
+    app.include_router(repos.router, prefix=f"{settings.app_prefix}/api/v1/repos")
 
 
     # --- Static assets (JS, CSS, images from Vite build) ---
