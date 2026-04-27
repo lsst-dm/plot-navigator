@@ -51,7 +51,7 @@ export default function AddCollectionSelect({ repos }) {
       await pollUpdates();
     } else if (res.status == "complete") {
       setStatusMessage("Complete")
-      setResultMessage(res.result);
+      setResultMessage(res.message);
     } else {
       setStatusMessage("Failed")
       setResultMessage(`Unknown error: ${res.message}`)

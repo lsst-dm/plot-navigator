@@ -57,7 +57,7 @@ class CacheResponse(BaseModel):
 
 class JobStatusResponse(BaseModel):
     status: str
-    result: str
+    message: str
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -80,7 +80,7 @@ async def enqueue_cache(body: CacheRequest,
     return CacheResponse(jobId=job_id)
 
 
-@router.get("/job/{job_id}", response_model=JobStatusResponse)
+@router.get("/job/{job_id}")
 async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
     """
     Poll the status and result of a cache job by its arq job ID.
@@ -102,7 +102,7 @@ async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
 
     return JobStatusResponse(
         status=status['status'],
-        result=""
+        message=status.get("message", "")
     )
 
 
