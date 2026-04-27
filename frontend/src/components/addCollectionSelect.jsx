@@ -46,7 +46,7 @@ export default function AddCollectionSelect({ repos }) {
     console.log(`Polling ${jobId}`);
     const res = await pollJob(jobId);
     bounceText();
-    if (res.status == "in_progress") {
+    if (res.status == "running") {
       setStatusMessage("In progress")
       await pollUpdates();
     } else if (res.status == "complete") {
@@ -54,7 +54,7 @@ export default function AddCollectionSelect({ repos }) {
       setResultMessage(res.result);
     } else {
       setStatusMessage("Failed")
-      setResultMessage(`Unknown error: ${res}`)
+      setResultMessage(`Unknown error: ${res.message}`)
     }
   };
   useEffect(() => {

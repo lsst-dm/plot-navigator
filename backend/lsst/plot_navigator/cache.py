@@ -73,7 +73,7 @@ async def enqueue_cache(body: CacheRequest,
     """
 
     job_id = str(uuid4())
-    request.app.state.redis.set(job_id, json.dumps({"status": "pending"}), ex=60*60*24)
+    request.app.state.redis.set(job_id, json.dumps({"status": "pending", "message": "Pending"}), ex=60*60*24)
     background_tasks.add_task(cache_plots, job_id, body.repo, body.collection,
                               request.app.state.s3_client,
                               body.filter_collections, request.app.state.redis)
@@ -135,7 +135,7 @@ def cache_plots(job_id: str,
         Success or error message.
     """
     if redis:
-        redis.set(job_id, json.dumps({"status": "running"}))
+        redis.set(job_id, json.dumps({"status": "running", "message": "Running"}))
     butler = dafButler.Butler(repo)
 
     try:
@@ -147,7 +147,7 @@ def cache_plots(job_id: str,
     except dafButler.MissingCollectionError:
         msg = f"Error: Collection '{collection}' not found in {repo} repo."
         if redis:
-            redis.set(job_id, json.dumps({"status": msg}))
+            redis.set(job_id, json.dumps({"status": "error", "message": msg}))
         return msg
 
     encoded_collection = urllib.parse.quote_plus(collection)
@@ -165,12 +165,12 @@ def cache_plots(job_id: str,
     except botocore.exceptions.ClientError as e:
         msg = f"Error: {e}"
         if redis:
-            redis.set(job_id, json.dumps({"status": msg}))
+            redis.set(job_id, json.dumps({"status": "error", "message": msg}))
         return msg
 
     n_plots = len(summary["tracts"]) + len(summary["visits"]) + len(summary["global"])
     if redis:
-        redis.set(job_id, json.dumps({"status": "Success: {n_plots} plots"}))
+        redis.set(job_id, json.dumps({"status": "complete", "message": "Success: {n_plots} plots"}))
     return f"Success: {n_plots} plots"
 
 def summarize_collection(butler: dafButler.Butler, collection_name: str, filter_prefix: str = "") -> dict:
