@@ -101,7 +101,7 @@ async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
         raise HTTPException(status_code=500, detail="Job status invalid")
 
     return JobStatusResponse(
-        status=status.status,
+        status=status['status'],
         result=""
     )
 
