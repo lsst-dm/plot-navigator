@@ -96,12 +96,12 @@ async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
         logger.error(f"JSON decode failure on input: {raw_status}")
         raise HTTPException(status_code=500, detail="Job status invalid")
 
-    if 'message' not in status:
+    if 'status' not in status:
         logger.error(f"Received invalid job status: {raw_status}")
         raise HTTPException(status_code=500, detail="Job status invalid")
 
     return JobStatusResponse(
-        status=status.message,
+        status=status.status,
         result=""
     )
 
