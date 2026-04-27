@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import gzip
+import logging
 import json
 import urllib.parse
 from uuid import uuid4
@@ -38,6 +39,7 @@ if TYPE_CHECKING:
 
 router = APIRouter(tags=["cache"])
 
+logger = logging.getLogger("api.cache")
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -91,9 +93,11 @@ async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
     try:
         status = json.loads(raw_status)
     except json.JSONDecodeError:
+        logger.error(f"JSON decode failure on input: {raw_status}")
         raise HTTPException(status_code=500, detail="Job status invalid")
 
     if 'message' not in status:
+        logger.error(f"Received invalid job status: {raw_status}")
         raise HTTPException(status_code=500, detail="Job status invalid")
 
     return JobStatusResponse(
