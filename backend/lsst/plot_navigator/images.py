@@ -41,7 +41,7 @@ butler_map: dict[str, Butler] = {}
 def get_butler(repo: str) -> Butler:
     if repo not in butler_map:
         print("Instantiating a butler")
-        butler_map[repo] = Butler(repo)
+        butler_map[repo] = Butler.from_config(repo)
     return butler_map[repo]
 
 

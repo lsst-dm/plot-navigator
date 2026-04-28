@@ -69,8 +69,8 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
 
 
     # --- Static assets (JS, CSS, images from Vite build) ---
-    if os.getenv("DIST_DIR"):
-        DIST = Path(os.getenv("DIST_DIR"))
+    if (dist_dir := os.getenv("DIST_DIR")) is not None:
+        DIST = Path(dist_dir)
     else:
         DIST = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
     app.mount(f"{settings.app_prefix}/assets", StaticFiles(directory=DIST / "assets"), name="assets")
@@ -95,7 +95,7 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
             extra={
                 "method": request.method,
                 "path": request.url.path,
-                "route": request.scope.get("route").path if request.scope.get("route") else request.url.path,
+                # "route": request.scope.get("route").path if request.scope.get("route") else request.url.path,
                 "status": response.status_code,
                 "duration_ms": duration_ms,
             },

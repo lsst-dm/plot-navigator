@@ -131,35 +131,51 @@ def _list_summaries_filesystem(repo_name: str) -> list[SummaryHeader]:
     return entries
 
 
-def _get_summary_s3(repo_name: str, collection_name: str, client: S3Client) -> CollectionSummaryFile:
+def _get_collection_data_s3(repo_name: str, collection_name: str, client: S3Client) -> CollectionSummaryFile:
     key = f"{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
 
-    try:
-        start = time.perf_counter()
-        response = client.get_object(Bucket=BUCKET_NAME, Key=key)
-        gz_data = response["Body"].read()
-        text_data = gzip.decompress(gz_data)
-        result = CollectionSummaryFile.model_validate_json(text_data)
-        duration_ms = (time.perf_counter() - start) * 1000
-        logger.info(f"_get_summary_s3 compressed: {len(gz_data):d} bytes, "
-                     f"uncompressed: {len(text_data):d} bytes, duration: {duration_ms:.2f} ms")
-        return result
-    except Exception as err:
-        logger.error(f"S3 error fetching summary: {err}")
-        return {}
+    start = time.perf_counter()
+    response = client.get_object(Bucket=BUCKET_NAME, Key=key)
+    gz_data = response["Body"].read()
+    text_data = gzip.decompress(gz_data)
+    result = CollectionSummaryFile.model_validate_json(text_data)
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.info(f"_get_summary_s3 compressed: {len(gz_data):d} bytes, "
+                    f"uncompressed: {len(text_data):d} bytes, duration: {duration_ms:.2f} ms")
+
+    return result
 
 
-def _get_summary_filesystem(repo_name: str, collection_name: str) -> CollectionSummaryFile:
+def _get_collection_data_filesystem(repo_name: str, collection_name: str) -> CollectionSummaryFile:
     path = (
         TEST_ASSETS_DIR
         / quote(repo_name, safe="")
         / f"collection_{quote(collection_name, safe='')}.json.gz"
     )
-    try:
-        return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
-    except Exception as err:
-        logger.error(f"Filesystem error fetching summary: {err}")
-        return {}
+
+    return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
+
+
+def _build_summary(collection_data) -> CollectionSummary:
+    plot_counts: dict[str, int] = defaultdict(int)
+    tract_counts: dict[int, int] = defaultdict(int)
+    visit_counts: dict[int, int] = defaultdict(int)
+
+    # .visits is a dict of [plot type, [{dataid, id}]]
+    for entry in [collection_data.visits, collection_data.tracts, collection_data.global_]:
+        for plot_type, plot_refs in entry.items():
+            plot_counts[plot_type] += len(plot_refs)
+
+            for plot_ref in plot_refs:
+                dataId = json.loads(plot_ref.dataId)
+                if 'tract' in dataId:
+                    tract_counts[int(dataId['tract'])] += 1
+                if 'visit' in dataId:
+                    visit_counts[int(dataId['visit'])] += 1
+
+    return CollectionSummary(plot_counts=plot_counts,
+                             tract_counts=tract_counts,
+                             visit_counts=visit_counts)
 
 
 # ---------------------------------------------------------------------------
@@ -191,37 +207,18 @@ def get_summary(repo: str,
                 request: Request,
                 settings: Settings = Depends(get_settings)) -> CollectionSummary:
     """
-    Fetch the summary JSON for a specific repo + collection.
-    The repo segment may contain slashes (e.g. embargo/main).
+    Return a summary of the plot types and their counts.
     """
 
     if not settings.enable_test_images:
-        data = _get_summary_s3(repo, collection, request.app.state.s3_client)
+        data = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
     else:
-        data = _get_summary_filesystem(repo, collection)
+        data = _get_collection_data_filesystem(repo, collection)
 
     if not data:
         raise HTTPException(status_code=404, detail="Summary not found")
 
-    plot_counts: dict[str, int] = defaultdict(int)
-    tract_counts: dict[int, int] = defaultdict(int)
-    visit_counts: dict[int, int] = defaultdict(int)
-
-    # .visits is a dict of [plot type, [{dataid, id}]]
-    for entry in [data.visits, data.tracts, data.global_]:
-        for plot_type, plot_refs in entry.items():
-            plot_counts[plot_type] += len(plot_refs)
-
-            for plot_ref in plot_refs:
-                dataId = json.loads(plot_ref.dataId)
-                if 'tract' in dataId:
-                    tract_counts[int(dataId['tract'])] += 1
-                if 'visit' in dataId:
-                    visit_counts[int(dataId['visit'])] += 1
-
-    return CollectionSummary(plot_counts=plot_counts,
-                             tract_counts=tract_counts,
-                             visit_counts=visit_counts)
+    return _build_summary(data)
 
 
 # TODO:
@@ -240,19 +237,20 @@ def get_plot_items(plot: str,
                    settings: Settings = Depends(get_settings)) -> list[PlotItem]:
 
     if not settings.enable_test_images:
-        summary = _get_summary_s3(repo, collection, request.app.state.s3_client)
+        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
     else:
-        summary = _get_summary_filesystem(repo, collection)
+        summary = _get_collection_data_filesystem(repo, collection)
 
     if not summary:
         raise HTTPException(status_code=404, detail="Collection summary not found")
 
+    entries: list[PlotItem]
     if plot in summary.visits:
-        entries: list[PlotItem] = summary.visits[plot]
+        entries = summary.visits[plot]
     elif plot in summary.tracts:
-        entries: list[PlotItem] = summary.tracts[plot]
+        entries = summary.tracts[plot]
     elif plot in summary.global_:
-        entries: list[PlotItem] = summary.global_[plot]
+        entries = summary.global_[plot]
     else:
         raise HTTPException(status_code=404, detail="Plot not found")
 
@@ -266,9 +264,9 @@ def get_tract_items(tract: int,
                    settings: Settings = Depends(get_settings)) -> list[NamedPlotItem]:
 
     if not settings.enable_test_images:
-        summary = _get_summary_s3(repo, collection, request.app.state.s3_client)
+        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
     else:
-        summary = _get_summary_filesystem(repo, collection)
+        summary = _get_collection_data_filesystem(repo, collection)
 
     if not summary:
         raise HTTPException(status_code=404, detail="Collection summary not found")

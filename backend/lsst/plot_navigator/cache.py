@@ -136,7 +136,7 @@ def cache_plots(job_id: str,
     """
     if redis:
         redis.set(job_id, json.dumps({"status": "running", "message": "Running"}))
-    butler = dafButler.Butler(repo)
+    butler = dafButler.Butler.from_config(repo)
 
     try:
         summary = summarize_collection(
