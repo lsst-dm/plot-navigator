@@ -170,7 +170,7 @@ def cache_plots(job_id: str,
 
     n_plots = len(summary["tracts"]) + len(summary["visits"]) + len(summary["global"])
     if redis:
-        redis.set(job_id, json.dumps({"status": "complete", "message": "Success: {n_plots} plots"}))
+        redis.set(job_id, json.dumps({"status": "complete", "message": f"Success: {n_plots} plots"}))
     return f"Success: {n_plots} plots"
 
 def summarize_collection(butler: dafButler.Butler, collection_name: str, filter_prefix: str = "") -> dict:

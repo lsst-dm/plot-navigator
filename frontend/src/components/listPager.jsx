@@ -35,13 +35,18 @@ export default function ListPager({
   };
   const cellClassNames = "px-2 py-3";
 
+  const formatDate = (dateString) => {
+    const d = new Date(dateString)
+    return d.toLocaleString()
+  }
+
   return (
     <div>
-      <div className="border-2 rounded px-2 inline-block my-0 ">
-        <table className="divide-y">
+      <div className="border-2 rounded px-2 inline-block my-0 w-4xl">
+        <table className="divide-y w-full">
           <thead>
             <tr>
-              <td className={cellClassNames}>Collection</td>
+              <td className={`min-w-lg ${cellClassNames}`}>Collection</td>
               {showRepo ? <td className={cellClassNames}>Repo</td> : ""}
               <td className={`text-right ${cellClassNames}`}>Last Updated</td>
             </tr>
@@ -62,7 +67,7 @@ export default function ListPager({
                   ""
                 )}
                 <td className={`text-right ${cellClassNames}`}>
-                  {summary.lastModified}
+                  {formatDate(summary.lastModified)}
                 </td>
               </tr>
             ))}

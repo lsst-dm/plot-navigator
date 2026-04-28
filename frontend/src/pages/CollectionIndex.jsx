@@ -46,22 +46,27 @@ export default function CollectionIndex() {
 
     return (
         <div>
-            <div className="m-5 inline-block">
+            <div className="m-5 w-fit">
                 <div className="flex flex-row items-end">
                     <div className="">
                         <h1 className="text-2xl py-4">Official Collections</h1>
                     </div>
                     <div className="grow text-right">
-                            <div className="py-4"><Link className="p-2 px-4 m-2 rounded-md text-white bg-sky-600" to="/addcollection">Add Collection</Link></div>
+                            <div className="py-4">
+                                <Link className="p-2 px-4 m-2 rounded-md text-white bg-sky-600" to="/addcollection">Add Collection</Link>
+                            </div>
                     </div>
                 </div>
                 <div className="clear-both"></div>
                 <ListPager listEntries={officialSummaryRefs()} />
             </div>
 
-            <h1 className="text-2xl m-5">User Collections</h1>
-            <div className="m-5 inline-block">
-                <ListPager listEntries={userSummaryRefs()} />
+            <div className="m-5 w-fit">
+                <h1 className="text-2xl mb-5">User Collections</h1>
+
+                <div className="w-xl">
+                    <ListPager listEntries={userSummaryRefs()} />
+                </div>
             </div>
 
         </div>
