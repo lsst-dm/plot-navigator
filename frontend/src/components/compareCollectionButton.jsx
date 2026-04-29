@@ -21,7 +21,7 @@ export default function CompareCollectionButton({
    . Route path="/comparison/:repo/:collection/:plotName" element={<Comparison />} />
   */
   const handleCompareOfficial = () => {
-    navigate(`/comparison/${repo}/${collection}/${plotName}`,
+    navigate(`/comparison/${repo}/${encodeURIComponent(collection)}/${plotName}`,
       { state:
         { repo2: selectedOfficial.split(";")[0],
         collection2: selectedOfficial.split(";")[1]

@@ -58,11 +58,11 @@ export default function DualPlotPager({
         plotA:
           plotEntriesA[
             dataIdStringsA.findIndex((x) => x === JSON.stringify(dataId))
-          ]?.plotFn ?? null,
+          ]?.plotFn ?? (() => {}),
         plotB:
           plotEntriesB[
             dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))
-          ]?.plotFn ?? null,
+          ]?.plotFn ?? (() => {}),
       }));
 
     const sortedEntries = indexedEntries.sort((a, b) =>
@@ -192,13 +192,17 @@ export default function DualPlotPager({
         <div className="flex flex-row justify-center">
           <div className="w-[35rem] p-1 m-0 font-bold">
             {plotEntriesA.length == 0
-              ? "No plots of this type in this collection"
-              : ""}
+                ? "No plots of this type in this collection"
+                : ""
+            }
           </div>
           <div className="w-[35rem] p-1 m-0 font-bold">
-            {plotEntriesB.length == 0
-              ? "No plots of this type in this collection"
-              : ""}
+            {collectionB ?
+              (plotEntriesB.length == 0
+                ? "No plots of this type in this collection"
+                : "")
+              : "No comparison collection selected"
+            }
           </div>
         </div>
       ) : (

@@ -13,10 +13,6 @@ export default function Comparison() {
 
     const location = useLocation()
 
-    /*
-    const { repo: _repo, repo2: _repo2, collection: _collection,
-        collection2: _collection2, plotName: _plotName } = await params
-    */
     const { repo: _repo, collection: _collection, plotName: _plotName } = useParams()
     const repo = decodeURIComponent(_repo)
     const repo2 = location.state?.repo2
@@ -37,7 +33,9 @@ export default function Comparison() {
       })
     }, [plotName, _repo, _collection])
 
-    useEffect(() => {apiFetch(`/api/v1/summaries/plot/${plotName}/${repo2}/${collection2}`)
+    useEffect(() => {
+        if(!repo2 || !collection2) { return }
+        apiFetch(`/api/v1/summaries/plot/${plotName}/${repo2}/${collection2}`)
         .then(data => {
             data.sort((a,b) => DataIdSortFunc(JSON.parse(a.dataId), JSON.parse(b.dataId)))
             setPlotEntries2(data)
