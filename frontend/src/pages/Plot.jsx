@@ -30,7 +30,6 @@ export default function Plot() {
     useEffect(() => {apiFetch(`/api/v1/summaries/plot/${plotName}/${_repo}/${_collection}`)
         .then(data => {
             data.sort((a,b) => DataIdSortFunc(JSON.parse(a.dataId), JSON.parse(b.dataId)))
-            console.log(JSON.stringify(data))
             setPlotList(data)
         })
         .catch((e) => {
@@ -61,9 +60,9 @@ export default function Plot() {
                 <div className="text-2xl m-5">{plotName}</div>
             </div>
             <div className="float-right">
-                {/*
-                <CompareCollectionButton baseURL={`${process.env.BASE_URL ?? ''}/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}`} collectionOptions={summaryRefs} />
-                */}
+                <CompareCollectionButton
+                    baseURL={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}`}
+                    />
             </div>
             <div className="clear-both"></div>
             <div className="">

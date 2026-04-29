@@ -1,30 +1,68 @@
 
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom"
+
+import { apiFetch } from '../wrappers'
 
 export default function CompareCollectionButton({
   baseURL,
-  collectionOptions,
 }) {
+  const navigate = useNavigate()
   const [showingPopup, setShowingPopup] = useState(false);
   const [selectedOfficial, setSelectedOfficial] = useState("");
   const [selectedUnofficial, setSelectedUnofficial] = useState("");
+  const [repoNames, setRepoNames] = useState([])
+
+  const [collectionOptions, setCollectionOptions] = useState([])
+
+  const { repo, collection, plotName } = useParams()
+  /*
+   . Route path="/comparison/:repo/:collection/:plotName" element={<Comparison />} />
+  */
+  const handleCompareOfficial = () => {
+    navigate(`/comparison/${repo}/${collection}/${plotName}`,
+      { state:
+        { repo2: selectedOfficial.split(";")[0],
+        collection2: selectedOfficial.split(";")[1]
+       } })
+  }
+
+  const handleCompareUnofficial = () => {}
+
+  useEffect(() => {
+    apiFetch("/api/v1/repos")
+      .then((data) => setRepoNames(data.repos))
+      .catch((e) => {
+        console.log(e);
+      })
+  }, [])
+
+  useEffect(() => {
+      apiFetch("/api/v1/summaries")
+      .then(data => {
+          data.sort((a,b) => (new Date(b.lastModified) - new Date(a.lastModified)))
+          /* const collections = data.map(entry => entry.collection) */
+          setCollectionOptions(data)
+      })
+      .catch((e) => {
+          console.log(e);
+    })
+  }, [])
 
   const officialOptions = collectionOptions
     .filter((option) => !option.collection.startsWith("u/"))
-    .sort((a, b) => b.lastModified - a.lastModified);
   const userOptions = collectionOptions
     .filter((option) => option.collection.startsWith("u/"))
-    .sort((a, b) => b.lastModified - a.lastModified);
 
   const makeOptionString = (option) => {
-    return `${encodeURIComponent(option.repo)}/${encodeURIComponent(option.collection)}`;
+    return `${encodeURIComponent(option.repo)};${encodeURIComponent(option.collection)}`;
   };
 
   return (
     <div>
       <div
-        className="block m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600"
+        className="block m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
         onClick={() => setShowingPopup(!showingPopup)}
       >
         <span className="text-l">
@@ -38,7 +76,7 @@ export default function CompareCollectionButton({
         <div className="border-2 border-black mx-5 m-2 p-2 absolute z-1 right-0 bg-white">
           <div className="block">
             <select
-              className="m-1 p-1"
+              className="m-1 p-1 border-1"
               value={selectedOfficial}
               onChange={(e) => {
                 setSelectedOfficial(e.target.value);
@@ -54,11 +92,16 @@ export default function CompareCollectionButton({
                 </option>
               ))}
             </select>
-            <a href={`${baseURL}/compare/${selectedOfficial}`}>Compare</a>
+            <div
+              className="inline m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
+              onClick={handleCompareOfficial}
+            >
+              Compare
+            </div>
           </div>
           <div className="block">
             <select
-              className="m-1 p-1"
+              className="m-1 p-1 border-1"
               value={selectedUnofficial}
               onChange={(e) => {
                 setSelectedUnofficial(e.target.value);
@@ -74,7 +117,13 @@ export default function CompareCollectionButton({
                 </option>
               ))}
             </select>
-            <a href={`${baseURL}/compare/${selectedUnofficial}`}>Compare</a>
+
+            <div
+              className="inline m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
+              onClick={handleCompareUnofficial}
+            >
+              Compare
+            </div>
           </div>
         </div>
       ) : (
