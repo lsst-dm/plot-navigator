@@ -12,7 +12,7 @@ from pathlib import Path
 import lsst.daf.butler
 from lsst.daf.butler import Butler, DatasetRef, DatasetType, FileDataset
 
-from lsst.plot_navigator.cache import summarize_collection
+from lsst.plot_navigator.cache import summarize_collection_v1
 
 
 def create_temp_butler(tracts: Iterable[int], repo_dir: Path) -> None:
@@ -86,7 +86,7 @@ def ingest_to_temp_butler(butler: Butler,
 
 def write_summary_file(butler, repo_name, collection):
 
-    summary = summarize_collection(butler, collection)
+    summary = summarize_collection_v1(butler, collection)
 
     encoded_collection = urllib.parse.quote_plus(collection)
     encoded_repo = urllib.parse.quote_plus(repo_name)

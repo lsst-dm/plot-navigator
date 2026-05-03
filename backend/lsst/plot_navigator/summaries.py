@@ -58,12 +58,14 @@ TEST_ASSETS_DIR = Path("test_assets/summaries")
 # ---------------------------------------------------------------------------
 
 class SummaryHeader(BaseModel):
+    """API response for the list of available collections."""
     repo: str
     collection: str
     filename: str
     lastModified: datetime
 
 class CollectionSummary(BaseModel):
+    """API response for the list of plots."""
     plot_counts: dict[str, int]
     tract_counts: dict[int, int]
     visit_counts: dict[int, int]
@@ -156,7 +158,7 @@ def _get_collection_data_filesystem(repo_name: str, collection_name: str) -> Col
     return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
 
 
-def _build_summary(collection_data) -> CollectionSummary:
+def _make_collection_summary_v1(collection_data) -> CollectionSummary:
     plot_counts: dict[str, int] = defaultdict(int)
     tract_counts: dict[int, int] = defaultdict(int)
     visit_counts: dict[int, int] = defaultdict(int)
@@ -218,7 +220,7 @@ def get_summary(repo: str,
     if not data:
         raise HTTPException(status_code=404, detail="Summary not found")
 
-    return _build_summary(data)
+    return _make_collection_summary_v1(data)
 
 
 # TODO:
@@ -229,22 +231,9 @@ def get_summary(repo: str,
 # - summaries/visit/{visit}/{repo}/{collection:path}
 # @router.get("//{repo}/{collection:path}")
 
-@router.get("/plot/{plot}/{repo}/{collection:path}")
-def get_plot_items(plot: str,
-                   repo: str,
-                   collection: str,
-                   request: Request,
-                   settings: Settings = Depends(get_settings)) -> list[PlotItem]:
-
-    if not settings.enable_test_images:
-        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
-    else:
-        summary = _get_collection_data_filesystem(repo, collection)
-
-    if not summary:
-        raise HTTPException(status_code=404, detail="Collection summary not found")
-
+def _make_plot_items_v1(plot: str, summary: CollectionSummaryFile) -> list[PlotItem]:
     entries: list[PlotItem]
+
     if plot in summary.visits:
         entries = summary.visits[plot]
     elif plot in summary.tracts:
@@ -255,6 +244,25 @@ def get_plot_items(plot: str,
         raise HTTPException(status_code=404, detail="Plot not found")
 
     return entries
+
+@router.get("/plot/{plot}/{repo}/{collection:path}")
+def get_plot_items(plot: str,
+                   repo: str,
+                   collection: str,
+                   request: Request,
+                   settings: Settings = Depends(get_settings)) -> list[PlotItem]:
+
+    summary: CollectionSummaryFile
+    if not settings.enable_test_images:
+        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
+    else:
+        summary = _get_collection_data_filesystem(repo, collection)
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="Collection summary not found")
+
+    return _make_plot_items_v1(plot, summary)
+
 
 @router.get("/tract/{tract}/{repo}/{collection:path}")
 def get_tract_items(tract: int,

@@ -21,6 +21,7 @@ def test_butler():
 @pytest.fixture
 def local_test_settings() -> Settings:
     return Settings(
+        app_prefix="",
         enable_test_images=True,
         butler_repo_names=["testing_butler"],
     )

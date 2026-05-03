@@ -74,7 +74,7 @@ async def enqueue_cache(body: CacheRequest,
 
     job_id = str(uuid4())
     request.app.state.redis.set(job_id, json.dumps({"status": "pending", "message": "Pending"}), ex=60*60*24)
-    background_tasks.add_task(cache_plots, job_id, body.repo, body.collection,
+    background_tasks.add_task(cache_plots_v1, job_id, body.repo, body.collection,
                               request.app.state.s3_client,
                               body.filter_collections, request.app.state.redis)
     return CacheResponse(jobId=job_id)
@@ -110,7 +110,7 @@ async def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
 # background worker
 # ---------------------------------------------------------------------------
 
-def cache_plots(job_id: str,
+def cache_plots_v1(job_id: str,
                 repo: str,
                 collection: str,
                 s3_client: S3Client,
@@ -139,7 +139,7 @@ def cache_plots(job_id: str,
     butler = dafButler.Butler.from_config(repo)
 
     try:
-        summary = summarize_collection(
+        summary = summarize_collection_v1(
             butler,
             collection,
             filter_prefix=collection if filter_collections else "",
@@ -173,7 +173,7 @@ def cache_plots(job_id: str,
         redis.set(job_id, json.dumps({"status": "complete", "message": f"Success: {n_plots} plots"}))
     return f"Success: {n_plots} plots"
 
-def summarize_collection(butler: dafButler.Butler, collection_name: str, filter_prefix: str = "") -> dict:
+def summarize_collection_v1(butler: dafButler.Butler, collection_name: str, filter_prefix: str = "") -> dict:
     out: dict = {}
     summary = butler.registry.getCollectionSummary(collection_name)
 
