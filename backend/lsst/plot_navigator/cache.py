@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from collections import Counter, defaultdict
 import gzip
 import logging
 import json
@@ -33,6 +34,9 @@ import botocore
 import lsst.daf.butler as dafButler
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
+from dataclasses import dataclass
+
+from .data_model import CollectionSummaryFileV2, PlotCollection
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -58,6 +62,13 @@ class CacheResponse(BaseModel):
 class JobStatusResponse(BaseModel):
     status: str
     message: str
+
+@dataclass
+class CollectionSummaryResponse:
+    base_summary_file: CollectionSummaryFileV2
+    indirect_files: dict[str, CollectionSummaryFileV2]
+    """Mapping of plot type to a CollectionSummaryFile for plots that get their own file."""
+
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -203,3 +214,68 @@ def summarize_collection_v1(butler: dafButler.Butler, collection_name: str, filt
     out["global"] = refs_for_types(global_plot_types)
 
     return out
+
+def summarize_collection_v2(butler: dafButler.Butler,
+                            collection_name: str,
+                            filter_prefix: str = "",
+                            direct_ref_limit: int = 10
+                            ) -> CollectionSummaryResponse:
+    """Create summary files for a collection.
+
+    Any plot types that contain more than direct_ref_limit plots will have a
+    separate summary file created for them, referenced in the indirect_refs list
+    and returned as a file in indirect_files dict.
+
+    """
+    summary = butler.registry.getCollectionSummary(collection_name)
+
+    plot_types = [x.name for x in summary.dataset_types if x.storageClass_name == "Plot"]
+
+    per_plot_counts = {}
+    per_tract_counts = defaultdict(int)
+    direct_refs = {}
+    indirect_refs = []
+    indirect_summary_files = {}
+
+    for plot_type in plot_types:
+        dataset_refs = list(butler.query_datasets(
+            plot_type, collections=collection_name
+        ))
+
+        ref_dicts = [
+            {"dataId": json.dumps(dict(ref.dataId.mapping)), "id": str(ref.id)}
+            for ref in dataset_refs
+            if ref.run.startswith(filter_prefix)
+        ]
+
+        per_plot_counts[plot_type] = len(ref_dicts)
+
+        tract_count = Counter(int(ref.dataId['tract'])
+                              for ref in dataset_refs
+                              if 'tract' in ref.dataId)
+
+        for tract, count in tract_count.items():
+            per_tract_counts[tract] += count
+
+        if len(ref_dicts) <= direct_ref_limit:
+            direct_refs[plot_type] = ref_dicts
+        else:
+            indirect_refs.append(plot_type)
+
+            # Reuse the CollectionSummaryV2 file format for the single-plot-type
+            # files that are referenced from the collection-level file. This is
+            # maybe a bit excessive but avoids defining a separate file type.
+
+            indirect_plot_collection = PlotCollection({plot_type: ref_dicts})
+            indirect_summary_files[plot_type] = CollectionSummaryFileV2(direct_refs=indirect_plot_collection)
+
+
+    summary = CollectionSummaryFileV2(
+                per_plot_counts=per_plot_counts,
+                per_tract_counts=per_tract_counts,
+                direct_refs=PlotCollection(direct_refs),
+                indirect_refs=indirect_refs
+                )
+
+    return CollectionSummaryResponse(base_summary_file=summary,
+                                     indirect_files=indirect_summary_files)

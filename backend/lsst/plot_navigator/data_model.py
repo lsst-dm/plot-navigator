@@ -60,3 +60,13 @@ class CollectionSummaryFile(BaseModel):
 
     model_config = {"populate_by_name": True}
 
+class CollectionSummaryFileV2(BaseModel):
+    per_plot_counts: dict[str, int] = Field(default_factory=dict, description="Number of plots for each plot type")
+    per_tract_counts: dict[int, int] = Field(default_factory=dict, description="Number of plots for each tract")
+
+    direct_refs: PlotCollection = Field(default_factory=PlotCollection)
+    indirect_refs: list[str] = Field(
+        default_factory=list,
+        description="List of plot types which are too numerous to store in the summary file",
+    )
+
