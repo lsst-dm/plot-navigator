@@ -21,21 +21,21 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
 import gzip
-import logging
 import json
+import logging
 import urllib.parse
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from typing import TYPE_CHECKING
-
-import botocore
 import lsst.daf.butler as dafButler
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from botocore.exceptions import ClientError
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
-from dataclasses import dataclass
 
+from .config import Settings, get_settings
 from .data_model import CollectionSummaryFileV2, PlotCollection
 
 if TYPE_CHECKING:
@@ -77,7 +77,8 @@ class CollectionSummaryResponse:
 @router.put("", response_model=CacheResponse)
 async def enqueue_cache(body: CacheRequest,
                         background_tasks: BackgroundTasks,
-                        request: Request) -> CacheResponse:
+                        request: Request,
+                        settings: Settings = Depends(get_settings)) -> CacheResponse:
     """
     Enqueue a cache_plots background job for the given repo and collection.
     Returns the arq job ID which can be polled via GET /cache/job/<job_id>.
@@ -85,7 +86,9 @@ async def enqueue_cache(body: CacheRequest,
 
     job_id = str(uuid4())
     request.app.state.redis.set(job_id, json.dumps({"status": "pending", "message": "Pending"}), ex=60*60*24)
-    background_tasks.add_task(cache_plots_v1, job_id, body.repo, body.collection,
+
+    cache_task = cache_plots_v2 if settings.use_v2_summaries else cache_plots_v1
+    background_tasks.add_task(cache_task, job_id, body.repo, body.collection,
                               request.app.state.s3_client,
                               body.filter_collections, request.app.state.redis)
     return CacheResponse(jobId=job_id)
@@ -173,7 +176,7 @@ def cache_plots_v1(job_id: str,
             Bucket="rubin-plot-navigator",
             Key=filename,
         )
-    except botocore.exceptions.ClientError as e:
+    except ClientError as e:
         msg = f"Error: {e}"
         if redis:
             redis.set(job_id, json.dumps({"status": "error", "message": msg}))
@@ -183,6 +186,99 @@ def cache_plots_v1(job_id: str,
     if redis:
         redis.set(job_id, json.dumps({"status": "complete", "message": f"Success: {n_plots} plots"}))
     return f"Success: {n_plots} plots"
+
+def cache_plots_v2(job_id: str,
+                repo: str,
+                collection: str,
+                s3_client: S3Client,
+                filter_collections: bool = False,
+                direct_ref_limit: int = 30,
+                redis = None) -> str:
+    """
+    Generate the plot cache file and write it to S3.
+
+    This writes out in the v2 file format and separately caches plot types that
+    are extremely numerous into their own cache file.
+
+    Parameters
+    ----------
+    repo : str
+        Butler repository.
+    collection : str
+        Butler collection to search for plots.
+    filter_collections : bool, optional
+        Only include plots in run collections named with the same prefix as
+        ``collection``.
+    direct_ref_limit : int, optional
+        Plot types with more than this number of plots will be written to
+        separate collection summary files, to support faster access.
+
+    Returns
+    -------
+    str
+        Success or error message.
+    """
+    if redis:
+        redis.set(job_id, json.dumps({"status": "running", "message": "Running"}))
+    butler = dafButler.Butler.from_config(repo)
+
+    try:
+        summary_response = summarize_collection_v2(
+            butler,
+            collection,
+            filter_prefix=collection if filter_collections else "",
+            direct_ref_limit=direct_ref_limit
+        )
+    except dafButler.MissingCollectionError:
+        msg = f"Error: Collection '{collection}' not found in {repo} repo."
+        if redis:
+            redis.set(job_id, json.dumps({"status": "error", "message": msg}))
+        return msg
+
+    encoded_collection = urllib.parse.quote_plus(collection)
+    encoded_repo = urllib.parse.quote_plus(repo)
+
+    #
+    #  Base summary file
+    #
+    filename = f"v2/{encoded_repo}/collection_{encoded_collection}.json.gz"
+    json_gzipped = gzip.compress(summary_response.base_summary_file.model_dump_json().encode())
+
+    try:
+        s3_client.put_object(
+            Body=json_gzipped,
+            Bucket="rubin-plot-navigator",
+            Key=filename,
+        )
+    except ClientError as e:
+        msg = f"Error: {e}"
+        if redis:
+            redis.set(job_id, json.dumps({"status": "error", "message": msg}))
+        return msg
+
+    for plot_name, indirect_summary in summary_response.indirect_files.items():
+        encoded_plot = urllib.parse.quote_plus(plot_name)
+        indirect_filename = f"v2/{encoded_repo}/indirects/{encoded_collection}/{encoded_plot}.json.gz"
+
+        indirect_json_gzipped = gzip.compress(indirect_summary.model_dump_json().encode())
+        try:
+            s3_client.put_object(
+                Body=indirect_json_gzipped,
+                Bucket="rubin-plot-navigator",
+                Key=indirect_filename,
+            )
+        except ClientError as e:
+            msg = f"Error: {e}"
+            if redis:
+                redis.set(job_id, json.dumps({"status": "error", "message": msg}))
+            return msg
+
+    summary = summary_response.base_summary_file
+    n_plots = sum(summary.per_tract_counts.values())
+    if redis:
+        redis.set(job_id, json.dumps({"status": "complete", "message": f"Success: {n_plots} plots"}))
+    return f"Success: {n_plots} plots"
+
 
 def summarize_collection_v1(butler: dafButler.Butler, collection_name: str, filter_prefix: str = "") -> dict:
     out: dict = {}

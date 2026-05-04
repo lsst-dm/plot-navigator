@@ -1,10 +1,16 @@
 
-from unittest.mock import Mock
-from uuid import uuid4
 import json
+from unittest.mock import Mock, ANY
+from uuid import uuid4
 
 from lsst.daf.butler import Butler
-from lsst.plot_navigator.cache import cache_plots_v1, summarize_collection_v1, summarize_collection_v2
+
+from lsst.plot_navigator.cache import (
+    cache_plots_v1,
+    cache_plots_v2,
+    summarize_collection_v1,
+    summarize_collection_v2,
+)
 
 
 def test_cache_plots_v1(test_butler):
@@ -25,6 +31,47 @@ def test_cache_plots_v1(test_butler):
 
     assert ret.startswith("Success")
     s3_client.put_object.assert_called_once()
+
+def test_cache_plots_v2(test_butler):
+    """Test that the cache is created and written to S3.
+    Does not test the contents of the cache file.
+    """
+
+    job_id = str(uuid4())
+    collection = "debug_collection"
+    repo = "testing_butler"
+    s3_client = Mock()
+    ret = cache_plots_v2(job_id,
+                repo,
+                collection,
+                s3_client,
+                filter_collections=False,
+                redis=None)
+
+    assert ret.startswith("Success")
+    s3_client.put_object.assert_called_once()
+
+def test_cache_plots_v2_indirect(test_butler):
+    """Test that indirect cache summaries are written.
+    Does not test the contents of the cache file.
+    """
+
+    job_id = str(uuid4())
+    collection = "debug_collection"
+    repo = "testing_butler"
+    s3_client = Mock()
+    ret = cache_plots_v2(job_id,
+                repo,
+                collection,
+                s3_client,
+                filter_collections=False,
+                direct_ref_limit=1, # Extra low limit to force indirect summary
+                redis=None)
+
+    assert ret.startswith("Success")
+    assert s3_client.put_object.call_count == 2
+    s3_client.put_object.assert_any_call(Body=ANY, Bucket="rubin-plot-navigator",
+                                         Key="v2/testing_butler/indirects/debug_collection/object_wPerpPSF_ColorColorFitPlot.json.gz")
 
 def test_summarize_v1(test_butler):
     """Test the contents of the collection summary."""

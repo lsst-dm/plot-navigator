@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     app_prefix: str = ""
     butler_repo_names: Annotated[list[str], NoDecode] = []
     enable_test_images: bool = False
+    use_v2_summaries: bool = True
 
     @field_validator("butler_repo_names", mode="before", check_fields=True)
     def split_comma_separated(cls, v: object) -> object:
