@@ -31,6 +31,9 @@ export default function Collection() {
       })
     }, [_repo, _collection])
 
+    const plotNames = Object.keys(plotCounts).sort()
+    const tractNumbers = Object.keys(tractCounts).sort()
+
     const selByDataId = (
                 <div className="">
                     <div className="border-0 rounded mr-4 p-4 w-48 float-left">
@@ -39,7 +42,7 @@ export default function Collection() {
                             <tr><td>Tract</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {Object.keys(tractCounts).map((tract, n) =>
+                        {tractNumbers.map((tract, n) =>
                             <tr key={n}>
                             <td className="p-1"><Link to={`/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${tract}`}>{tract}</Link></td>
                             <td className="p-1 text-right">{tractCounts[tract]}</td></tr>
@@ -73,7 +76,7 @@ export default function Collection() {
                             <tr><td>Plot Type</td><td>Plot count</td></tr>
                         </thead>
                         <tbody>
-                        {Object.keys(plotCounts).map((plot, n) =>
+                        {plotNames.map((plot, n) =>
                             <tr key={n}>
                                 <td className="p-1"><Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plot}`}>{plot}</Link></td>
                                 <td className="p-1 text-right">{plotCounts[plot]}</td>

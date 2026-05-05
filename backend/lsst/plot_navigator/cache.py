@@ -352,7 +352,7 @@ def summarize_collection_v2(butler: dafButler.Butler,
 
         tract_count = Counter(int(ref.dataId['tract'])
                               for ref in dataset_refs
-                              if 'tract' in ref.dataId)
+                              if 'tract' in ref.dataId and ref.run.startswith(filter_prefix))
 
         for tract, count in tract_count.items():
             per_tract_counts[tract] += count
@@ -371,8 +371,8 @@ def summarize_collection_v2(butler: dafButler.Butler,
 
 
     output_summary = CollectionSummaryFileV2(
-        per_plot_counts=per_plot_counts,
-        per_tract_counts=per_tract_counts,
+        per_plot_counts={k:v for (k,v) in per_plot_counts.items() if v > 0},
+        per_tract_counts={k:v for (k,v) in per_tract_counts.items() if v > 0},
         direct_refs=PlotCollection(direct_refs),
         indirect_refs=indirect_refs,
     )
