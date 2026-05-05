@@ -5,14 +5,14 @@ Create a temporary Butler repository and register an existing PNG file in place.
 
 import gzip
 import json
-import urllib
+import urllib.parse
 from collections.abc import Iterable
 from pathlib import Path
 
 import lsst.daf.butler
 from lsst.daf.butler import Butler, DatasetRef, DatasetType, FileDataset
 
-from lsst.plot_navigator.cache import summarize_collection_v1
+from lsst.plot_navigator.cache import summarize_collection_v1, summarize_collection_v2
 
 
 def create_temp_butler(tracts: Iterable[int], repo_dir: Path) -> None:
@@ -98,6 +98,31 @@ def write_summary_file(butler, repo_name, collection):
     with open(Path("test_assets/summaries") / filename, "wb") as f:
         f.write(json_gzipped)
 
+def write_summary_files_v2(butler, repo_name, collection):
+
+    summary_response = summarize_collection_v2(butler, collection)
+
+    encoded_collection = urllib.parse.quote_plus(collection)
+    encoded_repo = urllib.parse.quote_plus(repo_name)
+
+    summary = summary_response.base_summary_file
+    json_gzipped = gzip.compress(summary.model_dump_json().encode())
+
+    # TODO: This is duplicative
+    Path(f"test_assets/summaries/v2/{encoded_repo}/indirects").mkdir(parents=True, exist_ok=True)
+    filename = Path(f"v2/{encoded_repo}/collection_{encoded_collection}.json.gz")
+    with open(Path("test_assets/summaries") / filename, "wb") as f:
+        f.write(json_gzipped)
+
+
+    for plot_name, indirect_summary in summary_response.indirect_files.items():
+        encoded_plot = urllib.parse.quote_plus(plot_name)
+        indirect_filename = f"v2/{encoded_repo}/indirects/{encoded_collection}/{encoded_plot}.json.gz"
+
+        indirect_json_gzipped = gzip.compress(indirect_summary.model_dump_json().encode())
+        with open(Path("test_assets/summaries") / indirect_filename, "wb") as f:
+            f.write(indirect_json_gzipped)
+
 
 
 def make_test_butler(repo_dir: Path, repo_name: str) -> None:
@@ -106,6 +131,8 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
 
     # Create a collection with an annoyingly long name for testing.
     collections = ["debug_collection",
+                   "debug_collection_v2",
+                   "debug_collection_v2_only",
                    "LSSTCam/calib/DM-53399/3s_v1_dp2_gain_correction_20250720/gainCorrectionGen.20251124a/20251202T172458Z"]
 
     butler = Butler.from_config(repo_dir, writeable=True)
@@ -135,7 +162,13 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
         )
 
 
-        write_summary_file(butler, repo_name, collection)
+        if "v2_only" not in collection:
+            print(f"Writing v1 summary for collection: {collection}")
+            write_summary_file(butler, repo_name, collection)
+
+        if "v2" in collection:
+            print(f"Writing v2 summary for collection: {collection}")
+            write_summary_files_v2(butler, repo_name, collection)
 
 def main():
 

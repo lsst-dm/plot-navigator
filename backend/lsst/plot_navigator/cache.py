@@ -33,10 +33,11 @@ from uuid import uuid4
 import lsst.daf.butler as dafButler
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from lsst.daf.butler import MissingCollectionError  # pyright: ignore[reportPrivateImportUsage]
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
-from .data_model import CollectionSummaryFileV2, PlotCollection
+from .data_model import CollectionSummaryFileV2, PlotCollection, PlotItem
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -158,7 +159,7 @@ def cache_plots_v1(job_id: str,
             collection,
             filter_prefix=collection if filter_collections else "",
         )
-    except dafButler.MissingCollectionError:
+    except MissingCollectionError:
         msg = f"Error: Collection '{collection}' not found in {repo} repo."
         if redis:
             redis.set(job_id, json.dumps({"status": "error", "message": msg}))
@@ -229,7 +230,7 @@ def cache_plots_v2(job_id: str,
             filter_prefix=collection if filter_collections else "",
             direct_ref_limit=direct_ref_limit
         )
-    except dafButler.MissingCollectionError:
+    except MissingCollectionError:
         msg = f"Error: Collection '{collection}' not found in {repo} repo."
         if redis:
             redis.set(job_id, json.dumps({"status": "error", "message": msg}))
@@ -327,8 +328,8 @@ def summarize_collection_v2(butler: dafButler.Butler,
 
     plot_types = [x.name for x in summary.dataset_types if x.storageClass_name == "Plot"]
 
-    per_plot_counts = {}
-    per_tract_counts = defaultdict(int)
+    per_plot_counts: dict[str,int] = {}
+    per_tract_counts: dict[int,int] = defaultdict(int)
     direct_refs = {}
     indirect_refs = []
     indirect_summary_files = {}
@@ -339,7 +340,7 @@ def summarize_collection_v2(butler: dafButler.Butler,
         ))
 
         ref_dicts = [
-            {"dataId": json.dumps(dict(ref.dataId.mapping)), "id": str(ref.id)}
+            PlotItem(dataId=json.dumps(dict(ref.dataId.mapping)), id=str(ref.id))
             for ref in dataset_refs
             if ref.run.startswith(filter_prefix)
         ]
@@ -366,12 +367,12 @@ def summarize_collection_v2(butler: dafButler.Butler,
             indirect_summary_files[plot_type] = CollectionSummaryFileV2(direct_refs=indirect_plot_collection)
 
 
-    summary = CollectionSummaryFileV2(
-                per_plot_counts=per_plot_counts,
-                per_tract_counts=per_tract_counts,
-                direct_refs=PlotCollection(direct_refs),
-                indirect_refs=indirect_refs
-                )
+    output_summary = CollectionSummaryFileV2(
+        per_plot_counts=per_plot_counts,
+        per_tract_counts=per_tract_counts,
+        direct_refs=PlotCollection(direct_refs),
+        indirect_refs=indirect_refs,
+    )
 
-    return CollectionSummaryResponse(base_summary_file=summary,
+    return CollectionSummaryResponse(base_summary_file=output_summary,
                                      indirect_files=indirect_summary_files)

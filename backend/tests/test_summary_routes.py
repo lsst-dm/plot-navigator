@@ -37,6 +37,18 @@ def test_summary_contents(client: TestClient, test_butler):
     summary = CollectionSummary.model_validate(response.json())
     assert summary.plot_counts["object_wPerpPSF_ColorColorFitPlot"] == 2
 
+def test_summary_contents_v2(client: TestClient, test_butler):
+
+    # This collection has both v1 and v2
+    response = client.get("/api/v1/summaries/collection/testing_butler/debug_collection_v2")
+    summary = CollectionSummary.model_validate(response.json())
+    assert summary.plot_counts["object_wPerpPSF_ColorColorFitPlot"] == 2
+
+    # Only V2
+    response = client.get("/api/v1/summaries/collection/testing_butler/debug_collection_v2_only")
+    summary = CollectionSummary.model_validate(response.json())
+    assert summary.plot_counts["object_wPerpPSF_ColorColorFitPlot"] == 2
+
 def test_plot_items(client: TestClient, test_butler):
     url = "/api/v1/summaries/plot/object_wPerpPSF_ColorColorFitPlot/testing_butler/debug_collection"
     response = client.get(url)

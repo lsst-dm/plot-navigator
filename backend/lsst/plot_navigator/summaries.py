@@ -33,11 +33,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import quote, unquote
 
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
-from .data_model import CollectionSummaryFile, NamedPlotItem, PlotCollection, PlotItem
+from .data_model import CollectionSummaryFile, CollectionSummaryFileV2, NamedPlotItem, PlotCollection, PlotItem
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -157,6 +158,51 @@ def _get_collection_data_filesystem(repo_name: str, collection_name: str) -> Col
 
     return CollectionSummaryFile.model_validate_json( gzip.decompress(path.read_bytes()))
 
+def _get_collection_data_v2(repo_name: str,
+                            collection_name: str,
+                            client: S3Client | None = None,
+                            use_filesystem: bool = False) -> CollectionSummaryFileV2:
+
+    if not use_filesystem:
+        if not client:
+            raise ValueError("Must supply S3 client if use_filesystem=False")
+
+        key = f"{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
+
+        start = time.perf_counter()
+
+        try:
+            response = client.get_object(Bucket=BUCKET_NAME, Key=key)
+        except ClientError as e:
+            raise LookupError(e)
+
+        gz_data = response["Body"].read()
+        text_data = gzip.decompress(gz_data)
+        result = CollectionSummaryFileV2.model_validate_json(text_data)
+        duration_ms = (time.perf_counter() - start) * 1000
+        logger.info(f"_get_collection_data_v2 compressed: {len(gz_data):d} bytes, "
+                        f"uncompressed: {len(text_data):d} bytes, duration: {duration_ms:.2f} ms")
+
+        return result
+
+    else:
+
+        path = (
+            TEST_ASSETS_DIR / "v2"
+            / quote(repo_name, safe="")
+            / f"collection_{quote(collection_name, safe='')}.json.gz"
+        )
+        try:
+            data = path.read_bytes()
+        except FileNotFoundError as e:
+            raise LookupError(e)
+
+        return CollectionSummaryFileV2.model_validate_json( gzip.decompress(data))
+
+
+
+
+
 
 def _make_collection_summary_v1(collection_data) -> CollectionSummary:
     plot_counts: dict[str, int] = defaultdict(int)
@@ -212,13 +258,28 @@ def get_summary(repo: str,
     Return a summary of the plot types and their counts.
     """
 
-    if not settings.enable_test_images:
-        data = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
-    else:
-        data = _get_collection_data_filesystem(repo, collection)
+    try:
+        data_v2 = _get_collection_data_v2(repo, collection,
+                                        request.app.state.s3_client,
+                                        use_filesystem=settings.enable_test_images)
 
-    if not data:
-        raise HTTPException(status_code=404, detail="Summary not found")
+        return CollectionSummary(plot_counts=data_v2.per_plot_counts,
+                                 tract_counts=data_v2.per_tract_counts,
+                                 visit_counts={})
+
+    except LookupError as e:
+        print(f"Did not find v2 summary for collection {collection}")
+
+        #
+        # Fall back to v1 data
+        #
+        if not settings.enable_test_images:
+            data = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
+        else:
+            data = _get_collection_data_filesystem(repo, collection)
+
+        if not data:
+            raise HTTPException(status_code=404, detail="Summary not found")
 
     return _make_collection_summary_v1(data)
 
