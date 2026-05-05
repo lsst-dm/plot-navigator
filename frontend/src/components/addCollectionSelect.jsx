@@ -46,7 +46,7 @@ export default function AddCollectionSelect({ repos }) {
     console.log(`Polling ${jobId}`);
     const res = await pollJob(jobId);
     bounceText();
-    if (res.status == "running") {
+    if (res.status == "running" || res.status == "pending") {
       setStatusMessage("In progress")
       await pollUpdates();
     } else if (res.status == "complete") {

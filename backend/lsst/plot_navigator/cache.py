@@ -91,7 +91,8 @@ async def enqueue_cache(body: CacheRequest,
     cache_task = cache_plots_v2 if settings.use_v2_summaries else cache_plots_v1
     background_tasks.add_task(cache_task, job_id, body.repo, body.collection,
                               request.app.state.s3_client,
-                              body.filter_collections, request.app.state.redis)
+                              filter_collections=body.filter_collections,
+                              redis=request.app.state.redis)
     return CacheResponse(jobId=job_id)
 
 
@@ -129,6 +130,7 @@ def cache_plots_v1(job_id: str,
                 repo: str,
                 collection: str,
                 s3_client: S3Client,
+                *,
                 filter_collections: bool = False,
                 redis = None) -> str:
     """
@@ -192,6 +194,7 @@ def cache_plots_v2(job_id: str,
                 repo: str,
                 collection: str,
                 s3_client: S3Client,
+                *,
                 filter_collections: bool = False,
                 direct_ref_limit: int = 30,
                 redis = None) -> str:
