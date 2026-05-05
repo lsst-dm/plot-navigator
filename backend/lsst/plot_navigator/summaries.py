@@ -167,7 +167,7 @@ def _get_collection_data_v2(repo_name: str,
         if not client:
             raise ValueError("Must supply S3 client if use_filesystem=False")
 
-        key = f"{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
+        key = f"v2/{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
 
         start = time.perf_counter()
 
