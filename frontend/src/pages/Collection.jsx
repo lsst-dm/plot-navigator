@@ -32,7 +32,8 @@ export default function Collection() {
     }, [_repo, _collection])
 
     const plotNames = Object.keys(plotCounts).sort()
-    const tractNumbers = Object.keys(tractCounts).sort()
+    /* Must specify the comparison function or it will default to lexical sort */
+    const tractNumbers = Object.keys(tractCounts).sort((a,b) => a - b)
 
     const selByDataId = (
                 <div className="">
