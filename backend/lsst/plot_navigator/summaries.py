@@ -160,14 +160,20 @@ def _get_collection_data_filesystem(repo_name: str, collection_name: str) -> Col
 
 def _get_collection_data_v2(repo_name: str,
                             collection_name: str,
+                            *,
                             client: S3Client | None = None,
+                            indirect_plot: str | None = None,
                             use_filesystem: bool = False) -> CollectionSummaryFileV2:
 
     if not use_filesystem:
         if not client:
             raise ValueError("Must supply S3 client if use_filesystem=False")
 
-        key = f"v2/{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
+        if indirect_plot:
+            # v2/testing_butler/indirects/debug_collection/object_wPerpPSF_ColorColorFitPlot.json.gz
+            key = f"v2/{quote(repo_name, safe='')}/indirects/{quote(collection_name, safe='')}/{quote(indirect_plot, safe='')}.json.gz"
+        else:
+            key = f"v2/{quote(repo_name, safe='')}/collection_{quote(collection_name, safe='')}.json.gz"
 
         start = time.perf_counter()
 
@@ -187,22 +193,27 @@ def _get_collection_data_v2(repo_name: str,
 
     else:
 
-        path = (
-            TEST_ASSETS_DIR / "v2"
-            / quote(repo_name, safe="")
-            / f"collection_{quote(collection_name, safe='')}.json.gz"
-        )
+        if not indirect_plot:
+            path = (
+                TEST_ASSETS_DIR / "v2"
+                / quote(repo_name, safe="")
+                / f"collection_{quote(collection_name, safe='')}.json.gz"
+            )
+        else:
+            path = (
+                TEST_ASSETS_DIR / "v2"
+                / quote(repo_name, safe="")
+                / "indirects"
+                / f"{quote(collection_name, safe='')}"
+                / f"{quote(indirect_plot, safe='')}.json.gz"
+            )
+
         try:
             data = path.read_bytes()
         except FileNotFoundError as e:
             raise LookupError(e)
 
         return CollectionSummaryFileV2.model_validate_json( gzip.decompress(data))
-
-
-
-
-
 
 def _make_collection_summary_v1(collection_data) -> CollectionSummary:
     plot_counts: dict[str, int] = defaultdict(int)
@@ -260,7 +271,7 @@ def get_summary(repo: str,
 
     try:
         data_v2 = _get_collection_data_v2(repo, collection,
-                                        request.app.state.s3_client,
+                                        client=request.app.state.s3_client,
                                         use_filesystem=settings.enable_test_images)
 
         return CollectionSummary(plot_counts=data_v2.per_plot_counts,
@@ -313,16 +324,37 @@ def get_plot_items(plot: str,
                    request: Request,
                    settings: Settings = Depends(get_settings)) -> list[PlotItem]:
 
-    summary: CollectionSummaryFile
-    if not settings.enable_test_images:
-        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
-    else:
-        summary = _get_collection_data_filesystem(repo, collection)
+    try:
+        data_v2 = _get_collection_data_v2(repo, collection,
+                                        client=request.app.state.s3_client,
+                                        use_filesystem=settings.enable_test_images)
 
-    if not summary:
-        raise HTTPException(status_code=404, detail="Collection summary not found")
+        if plot in data_v2.direct_refs:
+            return data_v2.direct_refs[plot]
+        else:
+            indirect = _get_collection_data_v2(
+                repo,
+                collection,
+                indirect_plot=plot,
+                client=request.app.state.s3_client,
+                use_filesystem=settings.enable_test_images,
+            )
+            if plot not in indirect.direct_refs:
+                raise HTTPException(status_code=404, detail="Plot not found in cache file.")
+            return indirect.direct_refs[plot]
 
-    return _make_plot_items_v1(plot, summary)
+    except LookupError:
+
+        summary: CollectionSummaryFile
+        if not settings.enable_test_images:
+            summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
+        else:
+            summary = _get_collection_data_filesystem(repo, collection)
+
+        if not summary:
+            raise HTTPException(status_code=404, detail="Collection summary not found")
+
+        return _make_plot_items_v1(plot, summary)
 
 
 @router.get("/tract/{tract}/{repo}/{collection:path}")
@@ -332,24 +364,59 @@ def get_tract_items(tract: int,
                    request: Request,
                    settings: Settings = Depends(get_settings)) -> list[NamedPlotItem]:
 
-    if not settings.enable_test_images:
-        summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
-    else:
-        summary = _get_collection_data_filesystem(repo, collection)
+    try:
+        data_v2 = _get_collection_data_v2(repo, collection,
+                                        client=request.app.state.s3_client,
+                                        use_filesystem=settings.enable_test_images)
 
-    if not summary:
-        raise HTTPException(status_code=404, detail="Collection summary not found")
+        all_items: list[NamedPlotItem] = []
 
-    output = []
+        # This is a potentially expensive search for a big collection
+        for plot, plot_refs in data_v2.direct_refs.items():
+            matching_items = [
+                NamedPlotItem(name=plot, dataId=ref.dataId, id=ref.id)
+                for ref in plot_refs
+                if "tract" in ref.dataId and json.loads(ref.dataId)["tract"] == tract
+            ]
+            all_items.extend(matching_items)
 
-    data_sources: list[PlotCollection] = [summary.visits, summary.tracts, summary.global_]
+        for plot in data_v2.indirect_refs:
+            indirect_data = _get_collection_data_v2(
+                repo,
+                collection,
+                indirect_plot=plot,
+                client=request.app.state.s3_client,
+                use_filesystem=settings.enable_test_images,
+            )
+            matching_items = [
+                NamedPlotItem(name=plot, dataId=ref.dataId, id=ref.id)
+                for ref in indirect_data.direct_refs[plot]
+                if "tract" in ref.dataId and json.loads(ref.dataId)["tract"] == tract
+            ]
+            all_items.extend(matching_items)
 
-    for data_source in data_sources:
-        for plot_name, plot_list in data_source.items():
-            for plot in plot_list:
-                dataId = json.loads(plot.dataId)
-                if dataId.get('tract') == tract:
-                    output.append(NamedPlotItem(name=plot_name, dataId=plot.dataId, id=plot.id))
+        return all_items
 
-    return output
+    except LookupError:
+
+        if not settings.enable_test_images:
+            summary = _get_collection_data_s3(repo, collection, request.app.state.s3_client)
+        else:
+            summary = _get_collection_data_filesystem(repo, collection)
+
+        if not summary:
+            raise HTTPException(status_code=404, detail="Collection summary not found")
+
+        output = []
+
+        data_sources: list[PlotCollection] = [summary.visits, summary.tracts, summary.global_]
+
+        for data_source in data_sources:
+            for plot_name, plot_list in data_source.items():
+                for plot in plot_list:
+                    dataId = json.loads(plot.dataId)
+                    if dataId.get('tract') == tract:
+                        output.append(NamedPlotItem(name=plot_name, dataId=plot.dataId, id=plot.id))
+
+        return output
 

@@ -21,6 +21,7 @@
 
 import json
 
+import pytest
 from fastapi.testclient import TestClient
 
 from lsst.plot_navigator.summaries import CollectionSummary, NamedPlotItem, PlotItem, SummaryHeader
@@ -49,8 +50,12 @@ def test_summary_contents_v2(client: TestClient, test_butler):
     summary = CollectionSummary.model_validate(response.json())
     assert summary.plot_counts["object_wPerpPSF_ColorColorFitPlot"] == 2
 
-def test_plot_items(client: TestClient, test_butler):
-    url = "/api/v1/summaries/plot/object_wPerpPSF_ColorColorFitPlot/testing_butler/debug_collection"
+@pytest.mark.parametrize("collection",
+                         ["debug_collection",
+                          "debug_collection_v2",
+                          "debug_collection_v2_only"])
+def test_plot_items(collection: str, client: TestClient, test_butler):
+    url = f"/api/v1/summaries/plot/object_wPerpPSF_ColorColorFitPlot/testing_butler/{collection}"
     response = client.get(url)
     items = [PlotItem.model_validate(item) for item in response.json()]
     assert len(items) == 2
@@ -58,9 +63,12 @@ def test_plot_items(client: TestClient, test_butler):
     assert 1461 in tracts
     assert 1463 in tracts
 
-
-def test_tract_items(client: TestClient, test_butler):
-    url = "/api/v1/summaries/tract/1461/testing_butler/debug_collection"
+@pytest.mark.parametrize("collection",
+                         ["debug_collection",
+                          "debug_collection_v2",
+                          "debug_collection_v2_only"])
+def test_tract_items(collection: str, client: TestClient, test_butler):
+    url = f"/api/v1/summaries/tract/1461/testing_butler/{collection}"
     response = client.get(url)
     items = [NamedPlotItem.model_validate(item) for item in response.json()]
     assert len(items) == 1
