@@ -339,7 +339,7 @@ def summarize_collection_v2(butler: dafButler.Butler,
 
     for plot_type in plot_types:
         dataset_refs = list(butler.query_datasets(
-            plot_type, collections=collection_name
+            plot_type, collections=collection_name, limit=None,
         ))
 
         ref_dicts = [
