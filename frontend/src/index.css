@@ -1,6 +1,10 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter/wght.css";
 
 @theme {
   --color-rubin-blue: #058b8c;
+  --color-nav-bar: #0A2530;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
+
 

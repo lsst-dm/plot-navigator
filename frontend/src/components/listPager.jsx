@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom";
 import React from "react";
 import { useState } from "react";
+import { Button } from '../components/button'
 
 export default function ListPager({
   listEntries,
@@ -33,27 +34,27 @@ export default function ListPager({
       currentPage * entriesPerPage,
     );
   };
-  const cellClassNames = "px-2 py-3";
+  const cellClassNames = "px-2 py-2";
 
   const formatDate = (dateString) => {
     const d = new Date(dateString)
-    return d.toLocaleString()
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
   return (
     <div>
-      <div className="border-2 rounded px-2 inline-block my-0 w-4xl">
+      <div className="border-2 rounded px-0 inline-block my-0 w-4xl border-[#5C7878]">
         <table className="divide-y w-full">
           <thead>
             <tr>
-              <td className={`min-w-lg ${cellClassNames}`}>Collection</td>
-              {showRepo ? <td className={cellClassNames}>Repo</td> : ""}
-              <td className={`text-right ${cellClassNames}`}>Last Updated</td>
+              <td className={`min-w-lg  bg-gray-200 font-medium  ${cellClassNames}`}>Collection</td>
+              {showRepo ? <td className={` bg-gray-200 font-medium ${cellClassNames}`}>Repo</td> : ""}
+              <td className={`text-right  bg-gray-200 font-medium  ${cellClassNames}`}>Last Updated</td>
             </tr>
           </thead>
           <tbody>
             {getSlice(currentPage).map((summary, n) => (
-              <tr key={n}>
+              <tr key={n} className="hover:bg-gray-100">
                 <td className={cellClassNames}>
                   <Link
                     to={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}
@@ -76,31 +77,21 @@ export default function ListPager({
 
         <div className="flex flex-row items-center justify-center">
           <div className="m-3">
-            {currentPage > 1 ? (
-              <button
-                className="p-2 rounded-md text-white bg-sky-600"
+              <Button inactive={currentPage <= 1}
                 onClick={previousPage}
               >
-                Prev
-              </button>
-            ) : (
-              <div>Prev</div>
-            )}
+                ‹ Prev
+              </Button>
           </div>
           <div className="m-3">
             Page {currentPage}/{totalPages()}
           </div>
           <div className="m-3">
-            {currentPage < totalPages() ? (
-              <button
-                className="p-2 rounded-md text-white bg-sky-600"
-                onClick={nextPage}
-              >
-                Next
-              </button>
-            ) : (
-              <div>Next</div>
-            )}
+            <Button inactive={currentPage >= totalPages()}
+              onClick={nextPage}
+            >
+              Next ›
+            </Button>
           </div>
         </div>
       </div>

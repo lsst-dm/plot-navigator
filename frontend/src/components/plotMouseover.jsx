@@ -37,7 +37,7 @@ export default function PlotMouseover({src, imgkey, regions, label}) {
     return (
         <div >
             <div onMouseMove={mouseMove}>
-                <img key={imgkey} src={src} ref={childRef} />
+                <img className="p-2 bg-white" key={imgkey} src={src} ref={childRef} />
             </div>
             <div>{displayString}</div>
         </div>

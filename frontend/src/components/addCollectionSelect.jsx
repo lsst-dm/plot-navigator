@@ -6,6 +6,7 @@ import helpImg from "./help_18dp.svg"
 
 import { Tooltip } from 'react-tooltip';
 
+import { Button } from '../components/button'
 import { apiFetch } from '../wrappers'
 
 export async function putCollection(repo, collectionName, filterCollections = false) {
@@ -103,12 +104,7 @@ export default function AddCollectionSelect({ repos }) {
               />
             </td>
             <td>
-              <button
-                className="p-2 px-4 m-2 rounded-md text-white bg-sky-600 cursor-pointer"
-                onClick={submitForm}
-              >
-                Add
-              </button>
+              <Button onClick={submitForm} className="align-middle">Add</Button>
 
               <div className={`m-2 p-2 px-4 inline-block ${statusClasses}`}>
                 {statusMessage}

@@ -3,6 +3,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom"
 
+import { Button } from '../components/button'
 import { apiFetch } from '../wrappers'
 
 export default function CompareCollectionButton({
@@ -61,8 +62,7 @@ export default function CompareCollectionButton({
 
   return (
     <div>
-      <div
-        className="block m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
+      <Button className="m-4"
         onClick={() => setShowingPopup(!showingPopup)}
       >
         <span className="text-l">
@@ -71,7 +71,7 @@ export default function CompareCollectionButton({
             <path d="m4.427 7.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z"></path>
           </svg>
         </span>
-      </div>
+      </Button>
       {showingPopup ? (
         <div className="border-2 border-black mx-5 m-2 p-2 absolute z-1 right-0 bg-white">
           <div className="block">
@@ -92,12 +92,11 @@ export default function CompareCollectionButton({
                 </option>
               ))}
             </select>
-            <div
-              className="inline m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
+            <Button
               onClick={handleCompareOfficial}
             >
               Compare
-            </div>
+            </Button>
           </div>
           <div className="block">
             <select
@@ -118,12 +117,11 @@ export default function CompareCollectionButton({
               ))}
             </select>
 
-            <div
-              className="inline m-5 mb-0 px-4 py-2 rounded-md text-white bg-sky-600 cursor-pointer"
+            <Button
               onClick={handleCompareUnofficial}
             >
               Compare
-            </div>
+            </Button>
           </div>
         </div>
       ) : (

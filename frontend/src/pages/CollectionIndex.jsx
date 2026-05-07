@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react"
 
 import ListPager from '../components/listPager'
+import { Button } from '../components/button'
 
 import { apiFetch } from '../wrappers'
 
@@ -46,14 +47,14 @@ export default function CollectionIndex() {
 
     return (
         <div>
-            <div className="m-5 w-fit">
-                <div className="flex flex-row items-end">
+            <div className="mx-5 my-2 w-fit">
+                <div className="flex flex-row items-center">
                     <div className="">
                         <h1 className="text-2xl py-4">Official Collections</h1>
                     </div>
                     <div className="grow text-right">
-                            <div className="py-4">
-                                <Link className="p-2 px-4 m-2 rounded-md text-white bg-sky-600" to="/addcollection">Add Collection</Link>
+                            <div className="float-right items-center">
+                                <Button to="/addcollection">Add Collection</Button>
                             </div>
                     </div>
                 </div>
