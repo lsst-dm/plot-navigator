@@ -9,6 +9,7 @@ export default function ListPager({
   listEntries,
   entriesPerPage = 10,
   showRepo = true,
+  loaded = false,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -43,7 +44,7 @@ export default function ListPager({
 
   return (
     <div>
-      <div className="border-2 rounded px-0 inline-block my-0 w-4xl border-[#5C7878]">
+      <div className="border-2 rounded px-0 inline-block my-0 w-3xl border-[#5C7878]">
         <table className="divide-y w-full">
           <thead>
             <tr>
@@ -53,25 +54,26 @@ export default function ListPager({
             </tr>
           </thead>
           <tbody>
-            {getSlice(currentPage).map((summary, n) => (
-              <tr key={n} className="hover:bg-gray-100">
-                <td className={cellClassNames}>
-                  <Link
-                    to={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}
-                  >
-                    {summary.collection}
-                  </Link>
-                </td>
-                {showRepo ? (
-                  <td className={`${cellClassNames}`}>{summary.repo}</td>
-                ) : (
-                  ""
-                )}
-                <td className={`text-right ${cellClassNames}`}>
-                  {formatDate(summary.lastModified)}
-                </td>
-              </tr>
-            ))}
+            { loaded ?
+              getSlice(currentPage).map((summary, n) => (
+                <tr key={n} className="hover:bg-gray-100">
+                  <td className={cellClassNames}>
+                    <Link
+                      to={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}
+                    >
+                      {summary.collection}
+                    </Link>
+                  </td>
+                  {showRepo ? (
+                    <td className={`${cellClassNames}`}>{summary.repo}</td>
+                  ) : (
+                    ""
+                  )}
+                  <td className={`text-right ${cellClassNames}`}>
+                    {formatDate(summary.lastModified)}
+                  </td>
+                </tr>
+              )) : <tr><td className={cellClassNames}>Loading...</td></tr> }
           </tbody>
         </table>
 

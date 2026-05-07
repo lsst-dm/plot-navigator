@@ -11,6 +11,7 @@ import Tract from "./pages/Tract"
 import AddCollection from "./pages/AddCollection"
 import Comparison from "./pages/Comparison"
 import RootLayout from "./layout"
+import MorePlotsIndex from "./pages/MorePlotsIndex"
 
 const baseurl = import.meta.env.BASE_URL.replace(/\/$/, "") || "/"
 
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route element={<RootLayout />} >
             <Route path="/" element={<CollectionIndex />} />
+            <Route path="/more" element={<MorePlotsIndex />} />
             <Route path="/collection/:encodedRepo/:collection" element={<Collection />} />
 
             <Route path="/plot/:repo/:collection/:plotName" element={<Plot />} />
