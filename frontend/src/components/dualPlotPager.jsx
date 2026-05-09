@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import BandSelector from "./bandSelector";
 import { DataIdSortFunc } from '../components/dataIdFuncs'
 import { Button } from '../components/button'
+import { Lightbox } from '../components/Lightbox'
 
 /*
  * TODO:
@@ -29,6 +30,9 @@ export default function DualPlotPager({
   const [currentPage, setCurrentPage] = useState(1);
   const [inLightbox, setInLightbox] = useState(false);
   const [displayedEntry, setDisplayedEntry] = useState(0);
+
+  /* side = 0 for left, side = 1 for right-side plot */
+  const [displayedSide, setDisplayedSide] = useState(0);
 
   const getCombinedEntries = () => {
     /*
@@ -108,30 +112,24 @@ export default function DualPlotPager({
     }
   };
 
-  const showLightboxEntry = (entry) => {
+  const showLightboxEntry = (entry, side) => {
     setDisplayedEntry(entry);
     setInLightbox(true);
+    setDisplayedSide(side)
   };
 
   const exitLightbox = () => {
     setInLightbox(false);
   };
-  const doNothing = (e) => {
-    e.stopPropagation();
-  };
 
   const advanceLeft = (e) => {
-    e.stopPropagation();
-    if (displayedEntry > 0) {
-      setDisplayedEntry(displayedEntry - 1);
-    }
+    if(e) e.stopPropagation();
+    setDisplayedSide(0)
   };
 
   const advanceRight = (e) => {
-    e.stopPropagation();
-    if (displayedEntry < plotEntriesA.length - 1) {
-      setDisplayedEntry(displayedEntry + 1);
-    }
+    if(e) e.stopPropagation();
+    setDisplayedSide(1)
   };
 
   const getSlice = (currentPage) => {
@@ -140,6 +138,21 @@ export default function DualPlotPager({
       currentPage * plotsPerPage,
     );
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        if(inLightbox) { advanceLeft() }
+      } else if (e.key === 'ArrowRight') {
+        if(inLightbox) { advanceRight() }
+      } else if (e.key === 'Escape') {
+        if(inLightbox) { setInLightbox(false) }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [inLightbox, displayedEntry])
 
   return (
     <div>
@@ -198,8 +211,12 @@ export default function DualPlotPager({
       <div className="">
         {getSlice(currentPage).map((indexedEntry, n) => (
           <div key={n} className="flex flex-row justify-center">
-            <div className="w-[35rem] p-1 m-0">{indexedEntry.plotA()}</div>
-            <div className="w-[35rem] p-1 m-0">{indexedEntry.plotB()}</div>
+            <div className="w-[35rem] p-1 m-0"
+                  onClick={() => showLightboxEntry(indexedEntry.index, 0)}
+            >{indexedEntry.plotA()}</div>
+            <div className="w-[35rem] p-1 m-0"
+                  onClick={() => showLightboxEntry(indexedEntry.index, 1)}
+            >{indexedEntry.plotB()}</div>
           </div>
         ))}
       </div>
@@ -219,41 +236,14 @@ export default function DualPlotPager({
         </div>
       </div>
       {inLightbox ? (
-        <div
-          className="fixed top-0 left-0 w-screen h-screen bg-slate-500/75"
-          onClick={exitLightbox}
-        >
-          <div className="h-12"></div>
-          <div className="w-1/6 float-left h-1">
-            {displayedEntry > 0 ? (
-              <div
-                className="float-right flex items-center justify-center m-8 h-64 w-16 bg-indigo-100 hover:bg-indigo-600 hover:cursor-pointer"
-                onClick={advanceLeft}
-              >
-                <div>&lt;&lt;</div>
-              </div>
-            ) : (
-              ""
-            )}
-          </div>
-          <div className="w-2/3 float-left bg-white" onClick={doNothing}>
-            <div className="[&_img]:[max-height:75vh]">
-              {plotEntriesA[displayedEntry].plot}
-            </div>
-          </div>
-          <div className="w-1/6 float-left">
-            {displayedEntry < plotEntriesA.length - 1 ? (
-              <div
-                className="flex items-center justify-center m-8 h-64 w-16 bg-indigo-100 hover:bg-indigo-600 hover:cursor-pointer"
-                onClick={advanceRight}
-              >
-                <div>&gt;&gt;</div>
-              </div>
-            ) : (
-              ""
-            )}
-          </div>
-        </div>
+        <Lightbox plotFunction={displayedSide ?
+                    getCombinedEntries()[displayedEntry].plotA : getCombinedEntries()[displayedEntry].plotB}
+            prevEntry={advanceLeft}
+            nextEntry={advanceRight}
+            canGoPrev={displayedSide == 1}
+            canGoNext={displayedSide == 0}
+            exit={exitLightbox}
+        />
       ) : (
         ""
       )}
