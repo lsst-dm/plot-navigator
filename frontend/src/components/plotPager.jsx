@@ -50,6 +50,21 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
     }
   }, [selectedBands, currentPage]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        if(inLightbox) { advanceLeft() }
+      } else if (e.key === 'ArrowRight') {
+        if(inLightbox) { advanceRight() }
+      } else if (e.key === 'Escape') {
+        if(inLightbox) { setInLightbox(false) }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [inLightbox, displayedEntry])
+
   const displayBandSelector = () => {
     const dimensions = new Set(
       plotEntries.map((entry) => Object.keys(entry.dataId)).flat(),
@@ -82,14 +97,14 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
   };
 
   const advanceLeft = (e) => {
-    e.stopPropagation();
+    if(e) { e.stopPropagation(); }
     if (displayedEntry > 0) {
       setDisplayedEntry(displayedEntry - 1);
     }
   };
 
   const advanceRight = (e) => {
-    e.stopPropagation();
+    if(e) { e.stopPropagation(); }
     if (displayedEntry < filteredEntries.length - 1) {
       setDisplayedEntry(displayedEntry + 1);
     }
@@ -159,17 +174,21 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
       </div>
       {inLightbox ? (
         <div
-          className="fixed top-0 left-0 w-screen h-screen bg-slate-500/75"
+          className="fixed top-0 left-0 w-screen h-screen bg-slate-800/85"
           onClick={exitLightbox}
         >
           <div className="h-12"></div>
           <div className="w-1/6 float-left h-1">
             {displayedEntry > 0 ? (
               <div
-                className="float-right flex items-center justify-center m-8 h-64 w-16 bg-indigo-100 hover:bg-indigo-600 hover:cursor-pointer"
+                className={`absolute left-1/16 top-1/2 -translate-y-1/2 m-8 h-14 w-14 bg-lightbox-buttons/80 hover:bg-buttons-hover
+                            hover:cursor-pointer rounded-full
+                            flex items-center justify-center transition-colors`}
                 onClick={advanceLeft}
               >
-                <div>&lt;&lt;</div>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                </svg>
               </div>
             ) : (
               ""
@@ -183,10 +202,14 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
           <div className="w-1/6 float-left">
             {displayedEntry < filteredEntries.length - 1 ? (
               <div
-                className="flex items-center justify-center m-8 h-64 w-16 bg-indigo-100 hover:bg-indigo-600 hover:cursor-pointer"
+                className={`absolute right-12 top-1/2 -translate-y-1/2 m-8 h-14 w-14 bg-lightbox-buttons/80 hover:bg-buttons-hover
+                            hover:cursor-pointer rounded-full
+                            flex items-center justify-center transition-colors`}
                 onClick={advanceRight}
               >
-                <div>&gt;&gt;</div>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
               </div>
             ) : (
               ""
