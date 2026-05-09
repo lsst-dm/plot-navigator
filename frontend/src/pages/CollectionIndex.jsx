@@ -47,7 +47,15 @@ export default function CollectionIndex() {
                     </div>
                     <div className="grow text-right">
                             <div className="float-right items-center">
-                                <Button to="/addcollection">Add Collection</Button>
+                                <Button to="/addcollection" className="gap-1.5">
+                                    <span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"
+                                            className="h-4 w-4" width="16" height="16">
+                                            <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
+                                        </svg>
+                                    </span>
+                                    <span>Add Collection</span>
+                                    </Button>
                             </div>
                     </div>
                 </div>

@@ -104,12 +104,14 @@ export default function AddCollectionSelect({ repos }) {
               />
             </td>
             <td>
-              <Button onClick={submitForm} className="align-middle">Add</Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={submitForm} className="h-9">Add</Button>
 
-              <div className={`m-2 p-2 px-4 inline-block ${statusClasses}`}>
-                {statusMessage}
+                <div className={`m-2 p-2 px-4 h-9 ${statusClasses}`}>
+                  {statusMessage}
+                </div>
+                <div className={"m-2 p-2 px-4 h-9 "}>{resultMessage}</div>
               </div>
-              <div className={"m-2 p-2 px-4 inline-block "}>{resultMessage}</div>
             </td>
           </tr>
           <tr>
