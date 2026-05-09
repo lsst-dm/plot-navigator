@@ -8,7 +8,6 @@ import { Lightbox } from '../components/Lightbox'
 /*
  * TODO:
  * - Add an option to only show plots that exist in both collections
- * - Light box for blinking A vs B images.
  */
 
 export default function DualPlotPager({
@@ -81,7 +80,7 @@ export default function DualPlotPager({
   };
 
   const onBandUpdated = (band, value) => {
-    setSelectedBands({ ...selectedBands, [band]: event.target.checked });
+    setSelectedBands({ ...selectedBands, [band]: value });
   };
 
   useEffect(() => {
