@@ -104,7 +104,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
 
   return (
     <div>
-      <div className="grid grid-cols-3">
+      <div className="grid grid-cols-3 items-center">
         <div></div>
         <div className="flex flex-row items-center justify-center">
           <div className="m-3">
