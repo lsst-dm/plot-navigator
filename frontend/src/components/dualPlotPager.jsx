@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import BandSelector from "./bandSelector";
 import { DataIdSortFunc } from '../components/dataIdFuncs'
+import { Button } from '../components/button'
 
 /*
  * TODO:
@@ -146,31 +147,17 @@ export default function DualPlotPager({
         <div></div>
         <div className="flex flex-row items-center justify-center">
           <div className="m-3">
-            {currentPage > 1 ? (
-              <button
-                className="p-2 rounded-md text-white bg-sky-600"
-                onClick={previousPage}
-              >
-                Prev
-              </button>
-            ) : (
-              <div>Prev</div>
-            )}
+            <Button inactive={currentPage <= 1} onClick={previousPage} >
+              ‹ Prev
+            </Button>
           </div>
           <div className="m-3">
             Page {currentPage}/{totalPages()}
           </div>
           <div className="m-3">
-            {currentPage < totalPages() ? (
-              <button
-                className="p-2 rounded-md text-white bg-sky-600"
-                onClick={nextPage}
-              >
-                Next
-              </button>
-            ) : (
-              <div>Next</div>
-            )}
+            <Button inactive={currentPage >= totalPages()} onClick={nextPage} >
+              Next ›
+            </Button>
           </div>
         </div>
         <div className="m-2">
@@ -218,31 +205,17 @@ export default function DualPlotPager({
       </div>
       <div className="flex flex-row items-center justify-center">
         <div className="m-3">
-          {currentPage > 1 ? (
-            <button
-              className="p-2 rounded-md text-white bg-sky-600"
-              onClick={previousPage}
-            >
-              Prev
-            </button>
-          ) : (
-            <div>Prev</div>
-          )}
+          <Button inactive={currentPage <= 1} onClick={previousPage} >
+            ‹ Prev
+          </Button>
         </div>
         <div className="m-3">
           Page {currentPage}/{totalPages()}
         </div>
         <div className="m-3">
-          {currentPage < totalPages() ? (
-            <button
-              className="p-2 rounded-md text-white bg-sky-600"
-              onClick={nextPage}
-            >
-              Next
-            </button>
-          ) : (
-            <div>Next</div>
-          )}
+          <Button inactive={currentPage >= totalPages()} onClick={nextPage} >
+            Next ›
+          </Button>
         </div>
       </div>
       {inLightbox ? (
