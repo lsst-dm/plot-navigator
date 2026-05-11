@@ -93,7 +93,7 @@ export default function Collection() {
 
     return (
         <div>
-            <div className="text-m m-5"><Link to={`${GetCollectionListURLFromRepo(repo)}/`}>&lt;- Back to collections</Link></div>
+            <div className="text-m m-5"><Link to={`${GetCollectionListURLFromRepo(repo)}/`}>← Back to collections</Link></div>
             <div className="text-2xl m-5">{collection}</div>
 
             { "note" in collectionData ? 

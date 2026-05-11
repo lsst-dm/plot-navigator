@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, cloneElement } from "react";
 import BandSelector from "./bandSelector";
 import { DataIdSortFunc } from '../components/dataIdFuncs'
 import { Button } from '../components/button'
@@ -74,6 +74,14 @@ export default function DualPlotPager({
     );
     return sortedEntries;
   };
+
+  /*
+    This creates a version of the PlotDisplay that shows the collection, for use
+    in the lightbox. Not a very elegant solution but ok.
+  */
+  const wrapPlotDisplay = (plotFn ) => {
+    return () => cloneElement(plotFn(), {showCollection: true})
+  }
 
   const totalPages = () => {
     return Math.ceil(getCombinedEntries().length / plotsPerPage);
@@ -235,8 +243,9 @@ export default function DualPlotPager({
         </div>
       </div>
       {inLightbox ? (
-        <Lightbox plotFunction={displayedSide ?
-                    getCombinedEntries()[displayedEntry].plotA : getCombinedEntries()[displayedEntry].plotB}
+        <Lightbox plotFunction={displayedSide == 0 ?
+                    wrapPlotDisplay(getCombinedEntries()[displayedEntry].plotA)
+                    : wrapPlotDisplay(getCombinedEntries()[displayedEntry].plotB)}
             prevEntry={advanceLeft}
             nextEntry={advanceRight}
             canGoPrev={displayedSide == 1}

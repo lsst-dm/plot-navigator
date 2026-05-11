@@ -12,6 +12,7 @@ export default function PlotDisplay({
   showDataId = true,
   showDatasetType = false,
   showPermalink = false,
+  showCollection = false,
 }) {
   const { instrument, skymap, ...dataId } = JSON.parse(plotEntry.dataId);
   const uuid = plotEntry.id;
@@ -49,31 +50,38 @@ export default function PlotDisplay({
   }
 
   return (
-    <div className="m-2">
-      <div className="text-1xl my-5 text-wrap float-left">
-        {showDataId ? dataIdString : ""}
-        {showDatasetType ? typeWithWbr : ""}
-      </div>
-      {showPermalink ? (
-        <div className="text-1xl float-right">
-          <a href={`${process.env.BASE_URL ?? ""}/${permalink}`}>Plot link</a>
+    <div className="flex justify-center">
+      <div className="flex-col">
+        <div className="text-1xl gap-2 text-wrap">
+          {showCollection ? plotEntry.collection : ""}
         </div>
-      ) : (
-        ""
-      )}
-      {uuid ? (
-        <PlotMouseover
-          imgkey={uuid}
-          src={`${baseurl}/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
-          label={region_label}
-          regions={regions}
-      />
-      ) : (
-        <img
-          key={imgUrl}
-          src={`${baseurl}/images/path/${imgUrl}`}
+        <div className="text-1xl gap-2 text-wrap">
+          {showDataId ? dataIdString : ""}
+        </div>
+        <div className="text-1xl gap-2 text-wrap">
+          {showDatasetType ? typeWithWbr : ""}
+        </div>
+        {showPermalink ? (
+          <div className="text-1xl float-right">
+            <a href={`${process.env.BASE_URL ?? ""}/${permalink}`}>Plot link</a>
+          </div>
+        ) : (
+          ""
+        )}
+        {uuid ? (
+          <PlotMouseover
+            imgkey={uuid}
+            src={`${baseurl}/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
+            label={region_label}
+            regions={regions}
         />
-      )}
+        ) : (
+          <img
+            key={imgUrl}
+            src={`${baseurl}/images/path/${imgUrl}`}
+          />
+        )}
+      </div>
     </div>
   );
 }

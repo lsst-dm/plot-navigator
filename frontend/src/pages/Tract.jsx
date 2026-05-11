@@ -43,7 +43,7 @@ export default function Tract() {
     return (
         <div>
             <div className="text-m m-5">
-                <Link to={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>&lt;- Back to collection</Link>
+                <Link to={`/collection/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}`}>← Back to collection</Link>
             </div>
             <div className="text-2xl m-5">{collection}</div>
             <div className="text-2xl m-5">Tract {tract}</div>

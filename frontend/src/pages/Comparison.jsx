@@ -17,7 +17,7 @@ export default function Comparison() {
     const repo = decodeURIComponent(_repo)
     const repo2 = location.state?.repo2
     const collection = decodeURIComponent(_collection)
-    const collection2 = location.state?.collection2
+    const collection2 = decodeURIComponent(location.state?.collection2)
     const plotName = decodeURIComponent(_plotName)
 
     const [plotEntries, setPlotEntries] = useState([])
@@ -61,22 +61,24 @@ export default function Comparison() {
 
     /* We want the permalink on when in lightbox but off when in the general display, not sure how
      * to do that yet */
-    const plotDisplays = plotEntries.map((entry, n) => 
+    const plotDisplays = plotEntries.map((entry, n) =>
         ({dataId: JSON.parse(entry.dataId),
-            plotFn: () => <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+            plotFn: () => <PlotDisplay key={n} showPermalink={false}
+            plotEntry={ ({...entry, repo: repo, collection: collection,
         permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
     )
 
-    const plotDisplays2 = plotEntries2.map((entry, n) => 
+    const plotDisplays2 = plotEntries2.map((entry, n) =>
         ({dataId: JSON.parse(entry.dataId),
-            plotFn: () => <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo2,
+            plotFn: () => <PlotDisplay key={n} showPermalink={false}
+            plotEntry={ ({...entry, repo: repo2, collection: collection2,
         permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />})
     )
 
     return (
         <div>
             <div className="text-m m-5">
-                <Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plotName}`}>&lt;- Back to Plot</Link>
+                <Link to={`/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${plotName}`}>← Back to Plot</Link>
             </div>
             <div className="text-2xl m-5">{plotName}</div>
             <div className="">
