@@ -20,7 +20,7 @@ export default function AddCollection() {
     /* REPO_URLS */
     return (
         <div>
-            <div className="text-m m-5"><Link to={"/"}>-← Back to collections</Link></div>
+            <div className="text-m m-5"><Link to={"/"}>← Back to collections</Link></div>
             <div className="text-2xl m-5">Add a Collection:</div>
             <AddCollectionSelect repos={repoNames} />
         </div>

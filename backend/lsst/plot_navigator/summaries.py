@@ -77,14 +77,15 @@ class CollectionSummary(BaseModel):
 # Internal helpers — S3 and filesystem variants mirror the JS originals
 # ---------------------------------------------------------------------------
 
-def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryHeader]:
+def _list_summaries_s3(repo_name: str, client: S3Client, prefix: str = "") -> list[SummaryHeader]:
     entries: list[SummaryHeader] = []
-    prefix = f"{quote(repo_name, safe='')}/"
-    continuation_token: Optional[str] = None
+    prefix = prefix if prefix.endswith('/') else prefix + '/'
+    bucket_path = f"{prefix}{quote(repo_name, safe='')}/"
+    continuation_token: str | None = None
 
     start = time.perf_counter()
     while True:
-        kwargs: dict = {"Bucket": BUCKET_NAME, "Prefix": prefix}
+        kwargs: dict = {"Bucket": BUCKET_NAME, "Prefix": bucket_path}
         if continuation_token:
             kwargs["ContinuationToken"] = continuation_token
 
@@ -112,8 +113,11 @@ def _list_summaries_s3(repo_name: str, client: S3Client) -> list[SummaryHeader]:
     return entries
 
 
-def _list_summaries_filesystem(repo_name: str) -> list[SummaryHeader]:
-    repo_dir = TEST_ASSETS_DIR / quote(repo_name, safe="")
+def _list_summaries_filesystem(repo_name: str, prefix: str = "") -> list[SummaryHeader]:
+    if prefix:
+        repo_dir = TEST_ASSETS_DIR / prefix / quote(repo_name, safe="")
+    else:
+        repo_dir = TEST_ASSETS_DIR / quote(repo_name, safe="")
     entries: list[SummaryHeader] = []
 
     try:
@@ -252,10 +256,22 @@ def list_summaries(request: Request,
 
     if not settings.enable_test_images:
         for repo_name in settings.butler_repo_names:
-            results.extend(_list_summaries_s3(repo_name, request.app.state.s3_client))
+            v1_summaries = _list_summaries_s3(repo_name, request.app.state.s3_client)
+            v2_summaries = _list_summaries_s3(repo_name, request.app.state.s3_client, prefix="v2")
+            v2_repo_collections = [(s.repo, s.collection) for s in v2_summaries]
+
+            results.extend(v2_summaries)
+            results.extend([s for s in v1_summaries
+                            if (s.repo, s.collection) not in v2_repo_collections])
     else:
         for repo_name in settings.butler_repo_names:
-            results.extend(_list_summaries_filesystem(repo_name))
+            v1_summaries = _list_summaries_filesystem(repo_name)
+            v2_summaries = _list_summaries_filesystem(repo_name, prefix="v2")
+            v2_repo_collections = [(s.repo, s.collection) for s in v2_summaries]
+
+            results.extend(v2_summaries)
+            results.extend([s for s in v1_summaries
+                            if (s.repo, s.collection) not in v2_repo_collections])
 
     return results
 

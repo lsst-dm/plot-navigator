@@ -31,7 +31,11 @@ def test_list_summaries(client: TestClient, test_butler):
     response = client.get("/api/v1/summaries")
     headers = [SummaryHeader.model_validate(entry) for entry in response.json()]
     repos = [h.repo for h in headers]
+    collections = [h.collection for h in headers]
     assert "testing_butler" in repos
+    assert "debug_collection" in collections
+    assert "debug_collection_v2" in collections
+    assert "debug_collection_v2_only" in collections
 
 def test_summary_contents(client: TestClient, test_butler):
     response = client.get("/api/v1/summaries/collection/testing_butler/debug_collection")
