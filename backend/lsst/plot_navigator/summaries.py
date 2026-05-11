@@ -79,7 +79,6 @@ class CollectionSummary(BaseModel):
 
 def _list_summaries_s3(repo_name: str, client: S3Client, prefix: str = "") -> list[SummaryHeader]:
     entries: list[SummaryHeader] = []
-    prefix = prefix if prefix.endswith('/') else prefix + '/'
     bucket_path = f"{prefix}{quote(repo_name, safe='')}/"
     continuation_token: str | None = None
 
@@ -257,7 +256,7 @@ def list_summaries(request: Request,
     if not settings.enable_test_images:
         for repo_name in settings.butler_repo_names:
             v1_summaries = _list_summaries_s3(repo_name, request.app.state.s3_client)
-            v2_summaries = _list_summaries_s3(repo_name, request.app.state.s3_client, prefix="v2")
+            v2_summaries = _list_summaries_s3(repo_name, request.app.state.s3_client, prefix="v2/")
             v2_repo_collections = [(s.repo, s.collection) for s in v2_summaries]
 
             results.extend(v2_summaries)
@@ -266,7 +265,7 @@ def list_summaries(request: Request,
     else:
         for repo_name in settings.butler_repo_names:
             v1_summaries = _list_summaries_filesystem(repo_name)
-            v2_summaries = _list_summaries_filesystem(repo_name, prefix="v2")
+            v2_summaries = _list_summaries_filesystem(repo_name, prefix="v2/")
             v2_repo_collections = [(s.repo, s.collection) for s in v2_summaries]
 
             results.extend(v2_summaries)
