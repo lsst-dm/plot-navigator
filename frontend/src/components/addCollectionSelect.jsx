@@ -34,7 +34,7 @@ const pollJob = async (jobId) => {
 export default function AddCollectionSelect({ repos }) {
   const [repo, setRepo] = useState(repos?.[0] ?? "");
   const [collectionName, setCollectionName] = useState("");
-  const [filterCollections, setFilterCollections] = useState(false);
+  const [filterCollections, setFilterCollections] = useState(true);
   const [jobId, setJobId] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusClasses, setStatusClasses] = useState("");
