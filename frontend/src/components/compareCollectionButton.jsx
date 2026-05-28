@@ -29,7 +29,14 @@ export default function CompareCollectionButton({
        } })
   }
 
-  const handleCompareUnofficial = () => {}
+  const handleCompareUnofficial = () => {
+    navigate(`/comparison/${repo}/${encodeURIComponent(collection)}/${plotName}`,
+      { state:
+        { repo2: selectedUnofficial.split(";")[0],
+        collection2: selectedUnofficial.split(";")[1]
+       } })
+
+  }
 
   useEffect(() => {
     apiFetch("/api/v1/repos")
