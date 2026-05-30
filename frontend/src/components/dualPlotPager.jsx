@@ -62,22 +62,20 @@ export default function DualPlotPager({
     return () => cloneElement(plotFn(), {showCollection: true})
   }
 
-  const totalPages = () => {
-    return Math.ceil(getCombinedEntries().length / plotsPerPage);
-  };
+  const totalPages = Math.ceil(getCombinedEntries().length / plotsPerPage);
 
   const onBandUpdated = (band, value) => {
     setSelectedBands({ ...selectedBands, [band]: value });
   };
 
   useEffect(() => {
-    if (currentPage > totalPages()) {
-      setCurrentPage(totalPages());
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
-    if (currentPage == 0 && totalPages() > 0) {
+    if (currentPage == 0 && totalPages > 0) {
       setCurrentPage(1);
     }
-  }, [plotEntriesA, plotEntriesB, selectedBands]);
+  }, [plotEntriesA, plotEntriesB, selectedBands, totalPages]);
 
   const displayBandSelector = () => {
     const dimensions = new Set(
@@ -93,7 +91,7 @@ export default function DualPlotPager({
   };
 
   const nextPage = () => {
-    if (currentPage < totalPages()) {
+    if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -153,10 +151,16 @@ export default function DualPlotPager({
             </Button>
           </div>
           <div className="m-3">
-            Page {currentPage}/{totalPages()}
+            Page <input
+              className="border border-gray-400 rounded-sm m-1 p-1"
+              size={Math.ceil(Math.log10(totalPages + 1))}
+              value={currentPage}
+              onChange={(e) => setCurrentPage(parseInt(e.target.value) || 1)}
+            />
+            /{totalPages}
           </div>
           <div className="m-3">
-            <Button inactive={currentPage >= totalPages()} onClick={nextPage} >
+            <Button inactive={currentPage >= totalPages} onClick={nextPage} >
               Next ›
             </Button>
           </div>
@@ -218,10 +222,10 @@ export default function DualPlotPager({
           </Button>
         </div>
         <div className="m-3">
-          Page {currentPage}/{totalPages()}
+          Page {currentPage}/{totalPages}
         </div>
         <div className="m-3">
-          <Button inactive={currentPage >= totalPages()} onClick={nextPage} >
+          <Button inactive={currentPage >= totalPages} onClick={nextPage} >
             Next ›
           </Button>
         </div>

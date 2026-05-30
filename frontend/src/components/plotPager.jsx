@@ -33,23 +33,21 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
       }))
   );
 
-  const totalPages = () => {
-    return Math.ceil(filteredEntries.length / plotsPerPage);
-  };
+  const totalPages = Math.ceil(filteredEntries.length / plotsPerPage);
 
   const onBandUpdated = (band, value) => {
     setSelectedBands({ ...selectedBands, [band]: value });
   };
 
   useEffect(() => {
-    if (totalPages() === 0) return;  // don't adjust page while data is still loading
-    if (currentPage > totalPages()) {
-      setCurrentPage(totalPages());
+    if (totalPages === 0) return;  // don't adjust page while data is still loading
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
-    if (currentPage == 0 && totalPages() > 0) {
+    if (currentPage == 0 && totalPages > 0) {
       setCurrentPage(1);
     }
-  }, [selectedBands, currentPage]);
+  }, [selectedBands, currentPage, totalPages]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -80,7 +78,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
   };
 
   const nextPage = () => {
-    if (currentPage < totalPages()) {
+    if (currentPage < totalPages) {
       setCurrentPage(Number(currentPage) + 1);
     }
   };
@@ -131,14 +129,14 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
             Page
             <input
               className="border border-gray-400 rounded-sm m-1 p-1"
-              size={Math.ceil(Math.log10(totalPages() + 1))}
+              size={Math.ceil(Math.log10(totalPages + 1))}
               value={currentPage}
               onChange={(e) => setCurrentPage(parseInt(e.target.value) || 1)}
             />
-            /{totalPages()}
+            /{totalPages}
           </div>
           <div className="m-3">
-            <Button inactive={currentPage >= totalPages()}
+            <Button inactive={currentPage >= totalPages}
               onClick={nextPage}
             >
               Next
@@ -157,7 +155,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
         </div>
       </div>
       <div className="flex flex-row flex-wrap justify-center">
-        {currentPage >= 1 && currentPage <= totalPages()
+        {currentPage >= 1 && currentPage <= totalPages
           ? ""
           : "Invalid page number"}
         {getSlice(currentPage).map((indexedEntry, n) => (
