@@ -1,14 +1,9 @@
 
 import { useState, useEffect, cloneElement } from "react";
 import BandSelector from "./bandSelector";
-import { DataIdSortFunc } from '../components/dataIdFuncs'
+import { DataIdSortFunc, DataIdMerge } from '../components/dataIdFuncs'
 import { Button } from '../components/button'
 import { Lightbox } from '../components/Lightbox'
-
-/*
- * TODO:
- * - Add an option to only show plots that exist in both collections
- */
 
 export default function DualPlotPager({
   plotEntriesA,
@@ -29,51 +24,35 @@ export default function DualPlotPager({
   const [currentPage, setCurrentPage] = useState(1);
   const [inLightbox, setInLightbox] = useState(false);
   const [displayedEntry, setDisplayedEntry] = useState(0);
+  const [matchingPlots, setMatchingPlots] = useState(false);
 
   /* side = 0 for left, side = 1 for right-side plot */
   const [displayedSide, setDisplayedSide] = useState(0);
 
   const getCombinedEntries = () => {
-    /*
-     * To merge the two collections, we need the union of dataIDs. This requires converting
-     * dataIDs to strings to facilitate comparison, as JS objects will not compare as equal even
-     * if the keys and values are the same
-     */
-    const uniqDataIdSet = new Set([
-      ...plotEntriesA.map((entry) => JSON.stringify(entry.dataId)),
-      ...plotEntriesB.map((entry) => JSON.stringify(entry.dataId)),
-    ]);
-    const uniqDataIds = Array(...uniqDataIdSet).map(JSON.parse);
-
-    const dataIdStringsA = plotEntriesA.map((entry) =>
-      JSON.stringify(entry.dataId),
-    );
-    const dataIdStringsB = plotEntriesB.map((entry) =>
-      JSON.stringify(entry.dataId),
-    );
-
-    const indexedEntries = uniqDataIds
-      .filter((dataId) =>
-        "band" in dataId ? selectedBands[dataId.band] : true,
-      )
-      .map((dataId, n) => ({
-        dataId: dataId,
-        index: n,
-        plotA:
-          plotEntriesA[
-            dataIdStringsA.findIndex((x) => x === JSON.stringify(dataId))
-          ]?.plotFn ?? (() => {}),
-        plotB:
-          plotEntriesB[
-            dataIdStringsB.findIndex((x) => x === JSON.stringify(dataId))
-          ]?.plotFn ?? (() => {}),
-      }));
-
-    const sortedEntries = indexedEntries.sort((a, b) =>
+    const sortedA = plotEntriesA.sort((a, b) =>
       DataIdSortFunc(a.dataId, b.dataId),
-    );
-    return sortedEntries;
-  };
+    ).filter((entry) =>
+      "band" in entry.dataId ? selectedBands[entry.dataId.band] : true,
+    )
+
+    const sortedB = plotEntriesB.sort((a, b) =>
+      DataIdSortFunc(a.dataId, b.dataId),
+    ).filter((entry) =>
+      "band" in entry.dataId ? selectedBands[entry.dataId.band] : true,
+    )
+
+    const mergedEntries = DataIdMerge(sortedA, sortedB,
+      (a, b) => DataIdSortFunc(a.dataId, b.dataId))
+
+    return mergedEntries.filter((entry) => matchingPlots ? entry.a && entry.b : true)
+      .map((mergedEntry, n) => ({
+      dataId: mergedEntry.a?.dataId || mergedEntry.b?.dataId,
+      index: n,
+      plotA: mergedEntry.a?.plotFn ?? (() => {}),
+      plotB: mergedEntry.b?.plotFn ?? (() => {}),
+    }))
+  }
 
   /*
     This creates a version of the PlotDisplay that shows the collection, for use
@@ -164,7 +143,9 @@ export default function DualPlotPager({
   return (
     <div>
       <div className="grid grid-cols-3">
-        <div></div>
+        <div className="m-3 flex flex-row">
+
+        </div>
         <div className="flex flex-row items-center justify-center">
           <div className="m-3">
             <Button inactive={currentPage <= 1} onClick={previousPage} >
@@ -189,6 +170,9 @@ export default function DualPlotPager({
           ) : (
             ""
           )}
+          <label>
+            <input type="checkbox" checked={matchingPlots} onChange={(e) => setMatchingPlots(e.target.checked)}/> Only Matching Plots
+          </label>
         </div>
       </div>
       <div className="flex flex-row justify-center">

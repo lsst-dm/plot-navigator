@@ -1,4 +1,4 @@
-export default function DataIdSortFunc(dataIdA, dataIdB) {
+function DataIdSortFunc(dataIdA, dataIdB) {
   const bandsOrder = ["u", "g", "r", "i", "z", "y"];
 
   if ("tract" in dataIdA && "tract" in dataIdB) {
@@ -43,4 +43,37 @@ export default function DataIdSortFunc(dataIdA, dataIdB) {
   return 0;
 }
 
-export { DataIdSortFunc };
+const DataIdMerge = (iterableA, iterableB, sortFunc) => {
+  /*
+   * This takes two sorted lists of DataIds and merges them in order, returning objects
+   * of {a: , b: } with either the data IDs or null to preserve the ordering
+   */
+  const iteratorA = iterableA[Symbol.iterator]()
+  const iteratorB = iterableB[Symbol.iterator]()
+
+  let nextA = iteratorA.next()
+  let nextB = iteratorB.next()
+
+  const out = []
+
+  while(!nextA.done || !nextB.done) {
+
+    const comparison = nextA.done ? 1 : (nextB.done ? -1 : sortFunc(nextA.value, nextB.value))
+    if(comparison == 0) {
+      out.push({a: nextA.value, b: nextB.value})
+      nextA = iteratorA.next()
+      nextB = iteratorB.next()
+    } else if (comparison < 0) {
+      out.push({a: nextA.value, b: null})
+      nextA = iteratorA.next()
+    } else if (comparison > 0) {
+      out.push({a: null, b: nextB.value})
+      nextB = iteratorB.next()
+    }
+  }
+
+  return out
+
+}
+
+export { DataIdSortFunc, DataIdMerge };
