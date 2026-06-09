@@ -85,6 +85,9 @@ async def enqueue_cache(body: CacheRequest,
     Returns the arq job ID which can be polled via GET /cache/job/<job_id>.
     """
 
+    if body.repo not in settings.butler_repo_names:
+        raise HTTPException(status_code=400, detail=f"Repo '{body.repo}' is unknown")
+
     job_id = str(uuid4())
     request.app.state.redis.set(job_id, json.dumps({"status": "pending", "message": "Pending"}), ex=60*60*24)
 
