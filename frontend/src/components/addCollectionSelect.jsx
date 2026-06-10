@@ -62,6 +62,10 @@ export default function AddCollectionSelect({ repos }) {
     pollUpdates();
   }, [jobId]);
 
+  useEffect(() => {
+    setRepo(repos?.[0] ?? "");
+  }, [repos]);
+
   const submitForm = async () => {
     const jobId = await putCollection(repo, collectionName.trim(), filterCollections);
     setJobId(jobId);
