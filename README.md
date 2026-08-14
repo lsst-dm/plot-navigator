@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# Rubin Plot Navigator
 
-First, run the development server:
+The plot navigator is a web interface to viewing plots created by [analysis
+tools](https://github.com/lsst/analysis_tools) and stored in the Rubin
+[Butler](https://github.com/lsst/daf_butler). It is comprised of a React single-page application
+frontend which talks to a back-end server built on fastapi in Python.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## React Frontend
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The front end uses React Router to serve a single page application. This is compiled at
+container-build time by Vite and then served as a single JavaScript artifact by the backend FastAPI server.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## FastAPI Backend
 
-## Learn More
+The backend Python process serves the SPA bundle along with API routes supporting the frontend. It
+uses the Butler library to access the plot data. For performance, each collection that is served
+must have a cached list of plots pre-generated before it is available in the front end. This cache
+is stored on a object store and reduces the number of database queries required to serve the
+collection overview pages.
 
-To learn more about Next.js, take a look at the following resources:
+For a collection with small numbers of plots, all of the plot references are stored in a single JSON
+file. For plot dataset types with very large numbers of data IDs, the references for that particular
+plot type may be saved in a plot-specific file, which is referenced from the top-level collection
+cache file. This keeps the collection level file small for quick access. 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
