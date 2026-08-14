@@ -69,16 +69,16 @@ def ingest_to_temp_butler(butler: Butler,
         (ref,) = butler.registry.insertDatasets(
             dataset_type, dataIds=[data_id], run=run_collection
         )
-        print(f"Registered dataset ref: {ref}")
+        # print(f"Registered dataset ref: {ref}")
     except lsst.daf.butler.registry.ConflictingDefinitionError:
-        print("Skipping existing file")
+        # print("Skipping existing file")
         return
 
 
     # --- 6. Ingest in place with transfer="direct" ---
     file_dataset = FileDataset(path=str(file_path), refs=[ref])
     butler.ingest(file_dataset, transfer="direct")
-    print(f"Ingested in place: {file_path}")
+    # print(f"Ingested in place: {file_path}")
 
     # --- 7. Verify ---
     assert butler.exists(ref)
@@ -120,14 +120,16 @@ def write_summary_files_v2(butler, repo_name, collection):
         indirect_filename = f"v2/{encoded_repo}/indirects/{encoded_collection}/{encoded_plot}.json.gz"
 
         indirect_json_gzipped = gzip.compress(indirect_summary.model_dump_json().encode())
-        with open(Path("test_assets/summaries") / indirect_filename, "wb") as f:
+        indirect_path = Path("test_assets/summaries") / indirect_filename
+        indirect_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(indirect_path, "wb") as f:
             f.write(indirect_json_gzipped)
 
 
 
 def make_test_butler(repo_dir: Path, repo_name: str) -> None:
 
-    create_temp_butler(range(1461,1480), repo_dir)
+    create_temp_butler(range(1461,11461), repo_dir)
 
     # Create a collection with an annoyingly long name for testing.
     collections = ["debug_collection",
@@ -161,6 +163,16 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
             {"skymap": "test_skymap"}
         )
 
+        # Create a very large number of one type of plot.
+        if collection == collections[0]:
+            for tract in range(1462, 11400):
+                ingest_to_temp_butler(
+                    butler,
+                    "test_assets/images/debug/6b2b562b-9a4b-493a-9c59-a55e1a47e43c.png",
+                    "object_wPerpPSF_ColorColorFitPlot",
+                    collection,
+                    {"tract": tract, "skymap": "test_skymap", "band": "g"},
+                )
 
         if "v2_only" not in collection:
             print(f"Writing v1 summary for collection: {collection}")
@@ -169,6 +181,7 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
         if "v2" in collection:
             print(f"Writing v2 summary for collection: {collection}")
             write_summary_files_v2(butler, repo_name, collection)
+
 
 def main():
 
