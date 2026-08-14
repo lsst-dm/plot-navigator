@@ -1,0 +1,87 @@
+import React from "react";
+
+import PlotMouseover from "./plotMouseover"
+import { useState, useEffect } from "react"
+
+import { apiFetch } from '../wrappers'
+
+const baseurl = import.meta.env.BASE_URL ?? ""
+
+export default function PlotDisplay({
+  plotEntry,
+  showDataId = true,
+  showDatasetType = false,
+  showPermalink = false,
+  showCollection = false,
+}) {
+  const { instrument, skymap, ...dataId } = JSON.parse(plotEntry.dataId);
+  const uuid = plotEntry.id;
+  const imgUrl = plotEntry.url;
+  const repo = plotEntry.repo;
+  const permalink = plotEntry.permalink ?? "";
+  const datasetType = plotEntry.datasetType ?? "";
+
+  const splitType = [...datasetType.matchAll(/[a-zA-Z0-9]*(_|$)/g)].map(
+    (x) => x[0],
+  );
+  const typeWithWbr = splitType.join("\u00ad");
+
+  const dataIdString = Object.entries(dataId)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(", ");
+
+  const [pngMetadata, setPngMetadata] = useState({})
+
+  useEffect(() => {apiFetch( `/api/v1/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`)
+    .then(data => setPngMetadata(data))
+    .catch((e) => {
+        console.log(e);
+  })
+}, [])
+
+  let regions = [];
+  let region_label = "";
+  if('boxes' in pngMetadata && pngMetadata.boxes) {
+      try {
+          regions = JSON.parse(pngMetadata.boxes);
+          region_label = pngMetadata.label;
+      } catch (e) {
+      }
+  }
+
+  return (
+    <div className="flex justify-center">
+      <div className="flex-col">
+        <div className="text-1xl gap-2 text-wrap">
+          {showCollection ? plotEntry.collection : ""}
+        </div>
+        <div className="text-1xl gap-2 text-wrap">
+          {showDataId ? dataIdString : ""}
+        </div>
+        <div className="text-1xl gap-2 text-wrap">
+          {showDatasetType ? typeWithWbr : ""}
+        </div>
+        {showPermalink ? (
+          <div className="text-1xl float-right">
+            <a href={`${process.env.BASE_URL ?? ""}/${permalink}`}>Plot link</a>
+          </div>
+        ) : (
+          ""
+        )}
+        {uuid ? (
+          <PlotMouseover
+            imgkey={uuid}
+            src={`${baseurl}/api/v1/images/uuid/${encodeURIComponent(repo)}/${uuid}`}
+            label={region_label}
+            regions={regions}
+        />
+        ) : (
+          <img
+            key={imgUrl}
+            src={`${baseurl}/images/path/${imgUrl}`}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
