@@ -13,6 +13,7 @@ export default function PlotDisplay({
   showDatasetType = false,
   showPermalink = false,
   showCollection = false,
+  showMouseover = false,
 }) {
   const { instrument, skymap, ...dataId } = JSON.parse(plotEntry.dataId);
   const uuid = plotEntry.id;
@@ -32,12 +33,15 @@ export default function PlotDisplay({
 
   const [pngMetadata, setPngMetadata] = useState({})
 
-  useEffect(() => {apiFetch( `/api/v1/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`)
-    .then(data => setPngMetadata(data))
-    .catch((e) => {
-        console.log(e);
-  })
-}, [])
+  useEffect(() => {
+    if(showMouseover) {
+      apiFetch( `/api/v1/images/uuid_md/${encodeURIComponent(repo)}/${uuid}`)
+      .then(data => setPngMetadata(data))
+      .catch((e) => {
+          console.log(e);
+      })
+    }
+  }, [showMouseover])
 
   let regions = [];
   let region_label = "";

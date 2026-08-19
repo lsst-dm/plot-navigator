@@ -21,9 +21,11 @@
 
 
 import io
+import logging
+import time
 
+import anyio
 from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi.responses import StreamingResponse
 from lsst.daf.butler import Butler, DatasetId
 from lsst.resources import ResourcePath
 from PIL import Image
@@ -33,9 +35,9 @@ from .config import Settings, get_settings
 
 router = APIRouter(tags=["images"])
 
-# REPO_NAMES = os.getenv("BUTLER_REPO_NAMES", "").split(",")
-
 butler_map: dict[str, Butler] = {}
+
+logger = logging.getLogger("images")
 
 
 def get_butler(repo: str) -> Butler:
@@ -45,7 +47,7 @@ def get_butler(repo: str) -> Butler:
     return butler_map[repo]
 
 
-def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]:
+async def _validate_and_load(repo: str, uuid: str) -> bytes:
     """Shared validation logic: checks repo, fetches dataset, opens image."""
 
     butler = get_butler(repo)
@@ -58,10 +60,13 @@ def _validate_and_load(repo: str, uuid: str) -> tuple[ResourcePath, Image.Image]
     if dataset_ref.datasetType.storageClass_name != "Plot":
         raise HTTPException(status_code=400, detail="Storage class of dataset is not 'Plot'")
 
-    image_bytes = io.BytesIO(resource_path.read())
-    image = Image.open(image_bytes)
+    start = time.perf_counter()
+    async with await anyio.open_file(resource_path.path, "rb") as f:
+        image_bytes = await f.read()
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.info("Image file read time: %.2f ms ", duration_ms)
 
-    return resource_path, image
+    return image_bytes
 
 
 @router.get("/uuid/{repo}/{uuid}")
@@ -74,22 +79,11 @@ async def get_image(repo: str, uuid: str, settings: Settings = Depends(get_setti
     """
     if repo not in settings.butler_repo_names:
         raise HTTPException(status_code=400, detail=f"Invalid repo {repo}")
-    resource_path, image = _validate_and_load(repo, uuid)
+    image_bytes = await _validate_and_load(repo, uuid)
 
-    headers = {}
-    if "boxes" in image.info:
-        headers["Has-Metadata"] = "true"
-
-    # For HEAD requests return headers only, no body.
-    if not hasattr(get_image, "_request_method"):
-        pass  # handled by FastAPI routing — HEAD auto-strips body
-
-    # BytesIO behaves like a stream, so a fresh read is needed for send.
-    image_to_send = io.BytesIO(resource_path.read())
-    return StreamingResponse(
-        image_to_send,
+    return Response(
+        image_bytes,
         media_type="image/png",
-        headers=headers,
     )
 
 
@@ -108,7 +102,9 @@ async def get_metadata(repo: str,
     if repo not in settings.butler_repo_names:
         raise HTTPException(status_code=400, detail=f"Invalid repo {repo}")
 
-    _, image = _validate_and_load(repo, uuid)
+    image_bytes = await _validate_and_load(repo, uuid)
+
+    image = Image.open(io.BytesIO(image_bytes))
 
     return ImageMetadata(
         label=image.info.get("label"),

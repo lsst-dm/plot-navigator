@@ -20,6 +20,7 @@ dependencies = [
     "redis",
     "psycopg2-binary",
     "httpx>=0.28.1",
+    "anyio>=4.12.1",
 ]
 
 [project.optional-dependencies]
