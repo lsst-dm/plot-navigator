@@ -60,14 +60,14 @@ export default function CollectionIndex() {
                     </div>
                 </div>
                 <div className="clear-both"></div>
-                <ListPager listEntries={officialSummaryRefs()} loaded={isLoaded} />
+                <ListPager listEntries={officialSummaryRefs()} loaded={isLoaded} searchParamName="o"/>
             </div>
 
             <div className="m-5 w-fit">
                 <h1 className="text-2xl mb-5">User Collections</h1>
 
                 <div className="w-xl">
-                    <ListPager listEntries={userSummaryRefs()} loaded={isLoaded} />
+                    <ListPager listEntries={userSummaryRefs()} loaded={isLoaded} searchParamName="u"/>
                 </div>
             </div>
 

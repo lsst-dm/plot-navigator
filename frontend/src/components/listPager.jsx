@@ -2,16 +2,18 @@
 
 import { Link } from "react-router-dom";
 import React from "react";
-import { useState } from "react";
+import { useQueryParam } from './pagerCommon'
 import { Button } from '../components/button'
+
 
 export default function ListPager({
   listEntries,
   entriesPerPage = 10,
   showRepo = true,
   loaded = false,
+  searchParamName = "",
 }) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useQueryParam(searchParamName, 1);
 
   const totalPages = () => {
     return Math.ceil(listEntries.length / entriesPerPage);
