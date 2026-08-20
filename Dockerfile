@@ -1,7 +1,7 @@
 
-ARG PYTHON_VERSION="3.13"
+ARG PYTHON_VERSION="3.14"
 ARG DEBIAN_VERSION="trixie"
-ARG UV_VERSION="0.10"
+ARG UV_VERSION="0.12"
 ARG APP_PREFIX="/plot-navigator"
 #ARG ASGI_PORT="8080"
 
@@ -56,7 +56,7 @@ ENDRUN
 
 
 # -----------------
-FROM gcr.io/distroless/cc-debian13:debug AS server
+FROM debian:13-slim AS server
 
 WORKDIR /opt/python
 COPY --from=build-image /opt/python .
