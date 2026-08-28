@@ -36,7 +36,7 @@ export function Lightbox({
             </div>
             <div className="w-2/3 float-left bg-white" onClick={doNothing}>
             <div className="[&_img]:[max-height:75vh]">
-                {plotFunction()}
+                {plotFunction(true)}
             </div>
             </div>
             <div className="w-1/6 float-left">

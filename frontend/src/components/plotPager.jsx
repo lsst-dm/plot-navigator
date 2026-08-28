@@ -16,8 +16,15 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+  // displayedPage is a debounced version of currentPage
+  const [displayedPage, setDisplayedPage] = useState(1);
   const [inLightbox, setInLightbox] = useState(false);
   const [displayedEntry, setDisplayedEntry] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDisplayedPage(currentPage), 200);
+    return () => clearTimeout(t);
+  }, [currentPage]);
 
   const filteredEntries = useMemo(() =>
     plotEntries
@@ -106,10 +113,10 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
     }
   };
 
-  const getSlice = (currentPage) => {
+  const getSlice = (page) => {
     return filteredEntries.slice(
-      (currentPage - 1) * plotsPerPage,
-      currentPage * plotsPerPage,
+      (page - 1) * plotsPerPage,
+      page * plotsPerPage,
     );
   };
 
@@ -158,7 +165,7 @@ export default function PlotPager({ plotEntries, plotsPerPage = 10 }) {
         {currentPage >= 1 && currentPage <= totalPages
           ? ""
           : "Invalid page number"}
-        {getSlice(currentPage).map((indexedEntry, n) => (
+        {getSlice(displayedPage).map((indexedEntry, n) => (
           <div
             key={indexedEntry.index}
             className=" w-[28rem] p-1 m-0"

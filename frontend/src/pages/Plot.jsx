@@ -46,8 +46,8 @@ export default function Plot() {
      * to do that yet */
     const plotDisplays = plotList.map((entry, n) =>
         ({dataId: JSON.parse(entry.dataId),
-            plotFn: () => (
-            <PlotDisplay key={n} showPermalink={false} plotEntry={ ({...entry, repo: repo,
+            plotFn: (showMouseover = false) => (
+            <PlotDisplay key={n} showPermalink={false} showMouseover={showMouseover} plotEntry={ ({...entry, repo: repo,
         permalink: `/plot/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${encodeURIComponent(plotName)}/${encodeDataId(entry.dataId)}`}) } />
         )})
     )
