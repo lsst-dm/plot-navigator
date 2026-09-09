@@ -1,9 +1,11 @@
 // "use client";
 
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router";
 import React from "react";
 import { useQueryParam } from './pagerCommon'
 import { Button } from '../components/button'
+import { z } from 'zod';
 
 
 export default function ListPager({
@@ -13,7 +15,8 @@ export default function ListPager({
   loaded = false,
   searchParamName = "",
 }) {
-  const [currentPage, setCurrentPage] = useQueryParam(searchParamName, 1);
+  const location = useLocation();
+  const [currentPage, setCurrentPage] = useQueryParam(searchParamName, 1, z.coerce.number());
 
   const totalPages = () => {
     return Math.ceil(listEntries.length / entriesPerPage);
@@ -62,6 +65,7 @@ export default function ListPager({
                   <td className={cellClassNames}>
                     <Link
                       to={`/collection/${encodeURIComponent(summary.repo)}/${encodeURIComponent(summary.collection)}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       {summary.collection}
                     </Link>
