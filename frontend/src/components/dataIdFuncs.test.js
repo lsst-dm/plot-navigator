@@ -60,7 +60,6 @@ test('Merge DataID arrays with payload', () => {
         (a, b) => DataIdSortFunc(a.dataId, b.dataId))
     expect(merged[0].a.something).toBe(1234)
     expect(merged[0].b.something).toBe(9999)
-    console.log(JSON.stringify(merged))
 
     expect(merged[1].a.something).toBe(5678)
     expect(merged[1].b).toBe(null)

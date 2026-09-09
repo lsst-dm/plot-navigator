@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import React from "react";
 import { useQueryParam } from './pagerCommon'
 import { Button } from '../components/button'
+import { z } from 'zod';
 
 
 export default function ListPager({
@@ -13,7 +14,7 @@ export default function ListPager({
   loaded = false,
   searchParamName = "",
 }) {
-  const [currentPage, setCurrentPage] = useQueryParam(searchParamName, 1);
+  const [currentPage, setCurrentPage] = useQueryParam(searchParamName, 1, z.coerce.number());
 
   const totalPages = () => {
     return Math.ceil(listEntries.length / entriesPerPage);
