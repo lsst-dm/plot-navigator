@@ -1,8 +1,8 @@
 
 
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { GetCollectionListURLFromRepo } from '../summaries'
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useState, useEffect } from "react"
 import TruncatedText from '../components/TruncatedText'
 import TabNav from '../components/TabNav'
@@ -14,6 +14,7 @@ export default function Collection() {
     const { collection: _collection, encodedRepo: _repo } = useParams()
     const collection = decodeURIComponent(_collection)
     const repo = decodeURIComponent(_repo)
+    const { state } = useLocation();
 
     const [collectionData, setCollectionData] = useState({tracts: [], visits: [], global: []})
     const [plotCounts, setPlotCounts] = useState({})
@@ -93,7 +94,7 @@ export default function Collection() {
 
     return (
         <div>
-            <div className="text-m m-5"><Link to={`${GetCollectionListURLFromRepo(repo)}/`}>← Back to collections</Link></div>
+            <div className="text-m m-5"><Link to={state?.from ?? `${GetCollectionListURLFromRepo(repo)}/`}>← Back to collections</Link></div>
             <div className="text-2xl m-5">{collection}</div>
 
             { "note" in collectionData ? 
