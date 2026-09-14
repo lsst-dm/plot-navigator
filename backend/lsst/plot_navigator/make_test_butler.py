@@ -135,7 +135,12 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
     collections = ["debug_collection",
                    "debug_collection_v2",
                    "debug_collection_v2_only",
+                   "big_debug_collection",
                    "LSSTCam/calib/DM-53399/3s_v1_dp2_gain_correction_20250720/gainCorrectionGen.20251124a/20251202T172458Z"]
+
+    # Create one collection with several hundred plots for testing (all the same plot PNG)
+    big_collection = "big_debug_collection"
+    assert big_collection in collections
 
     butler = Butler.from_config(repo_dir, writeable=True)
 
@@ -164,7 +169,7 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
         )
 
         # Create a very large number of one type of plot.
-        if collection == collections[0]:
+        if collection == big_collection:
             for tract in range(1462, 11400):
                 ingest_to_temp_butler(
                     butler,
