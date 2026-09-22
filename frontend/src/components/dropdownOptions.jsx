@@ -3,7 +3,7 @@ import { useState, useRef } from 'react'
 
 import { Button } from '../components/button'
 
-export function DropdownOptions({options, onChange}) {
+export function DropdownOptions({options, prefix, onChange}) {
 
   const [expanded, setExpanded] = useState(false)
   const [selectedOption, setSelectedOption] = useState(options[0])
@@ -33,7 +33,7 @@ export function DropdownOptions({options, onChange}) {
         onClick={() => {setExpanded(!expanded); if(!expanded) {installListener()};}}
       >
         <span className="text-l">
-          Metric Group: {selectedOption}{" "}
+          {prefix ? `${prefix}:` : ''} {selectedOption}{" "}
           <svg className="h-5 w-5 inline" fill="white">
             <path d="m4.427 7.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z"></path>
           </svg>

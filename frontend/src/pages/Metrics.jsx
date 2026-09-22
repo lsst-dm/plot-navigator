@@ -64,13 +64,15 @@ const createColumnsFromRow = (row, groupPrefix, repo, collection) => {
 
 export default function Metrics() {
 
-  const { table, collection: _collection, repo: _repo } = useParams()
+  const { collection: _collection, repo: _repo } = useParams()
   const collection = decodeURIComponent(_collection)
   const repo = decodeURIComponent(_repo)
 
   const [data, setData] = useState([])
   const [columns, setColumns] = useState([])
   const [groups, setGroups] = useState([])
+  const [table, setTable] = useState("")
+  const [tableList, setTableList] = useState("")
   const [selectedGroups, setSelectedGroups] = useState({})
 
   useEffect(() => {apiFetch(`/api/v1/tables/groups/${table}/${_repo}/${_collection}`)
@@ -80,7 +82,7 @@ export default function Metrics() {
       .catch((e) => {
           console.log(e);
     })
-  }, [])
+  }, [table])
 
   useEffect(() => {
     const groupString = Object.keys(selectedGroups).filter((key) => selectedGroups[key]).join(",")
@@ -95,12 +97,22 @@ export default function Metrics() {
     })
   }, [selectedGroups])
 
+  useEffect(() => {apiFetch(`/api/v1/tables/tables/${_repo}/${_collection}`)
+      .then(data => {
+          setTableList(data.tables)
+      })
+      .catch((e) => {
+          console.log(e);
+    })
+  }, [])
+
 
     return (
       <div>
         <div>
           <div className="text-2xl p-2">{table}</div>
-          <DropdownOptions options={groups} onChange={(selGroup) => setSelectedGroups({[selGroup]: true})}/>
+          <DropdownOptions options={tableList} prefix={"Metric Table"} onChange={(selTable) => setTable(selTable)}/>
+          <DropdownOptions options={groups} prefix={"Metric Group"} onChange={(selGroup) => setSelectedGroups({[selGroup]: true})}/>
         </div>
         <MetricTable data={data} columns={columns} />
       </div>
