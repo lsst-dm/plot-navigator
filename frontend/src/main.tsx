@@ -10,6 +10,8 @@ import Plot from "./pages/Plot"
 import Tract from "./pages/Tract"
 import AddCollection from "./pages/AddCollection"
 import Comparison from "./pages/Comparison"
+import Metrics from "./pages/Metrics"
+import MetricsList from "./pages/MetricsList"
 import RootLayout from "./layout"
 import MorePlotsIndex from "./pages/MorePlotsIndex"
 
@@ -29,6 +31,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/tract/:repo/:collection/:tract" element={<Tract />} />
 
             <Route path="/addcollection" element={<AddCollection />} />
+            <Route path="/metrics/:repo/:collection" element={<MetricsList />} />
+            <Route path="/metrics/:repo/:collection/:table" element={<Metrics />} />
         </Route>
       </Routes>
     </BrowserRouter>
