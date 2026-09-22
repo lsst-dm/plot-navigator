@@ -48,6 +48,14 @@ def create_temp_butler(tracts: Iterable[int], repo_dir: Path) -> None:
         )
     )
 
+    butler.registry.registerDatasetType(
+        DatasetType(
+            "object_metrics_table",
+            butler.dimensions.conform(["skymap"]),
+            "ArrowAstropy",
+        )
+    )
+
     print(f"Created temporary Butler repo at: {repo_dir}")
 
 
@@ -166,6 +174,14 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
             "analysis_source_association_whole_sky_wholeSkyMetric_stellarAstrometricRepeatability1_i_AM1_WholeSkyPlot",
             collection,
             {"skymap": "test_skymap"}
+        )
+
+        ingest_to_temp_butler(
+            butler,
+            "test_assets/object_metrics_table_lsst_cells_v2_LSSTCam_runs_DRP_DP2_v30_0_6_rc1_DM-53881_stage3_20260412T000817Z.parq",
+            "object_metrics_table",
+            collection,
+            {"skymap": "test_skymap"},
         )
 
         # Create a very large number of one type of plot.

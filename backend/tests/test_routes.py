@@ -22,9 +22,24 @@
 from fastapi.testclient import TestClient
 
 from lsst.plot_navigator.repos import RepoList
+from lsst.plot_navigator.tables import TableList, GroupList
 
 
 def test_list_summaries(client: TestClient, test_butler):
     response = client.get("/api/v1/repos")
     repo_list = RepoList.model_validate(response.json())
     assert "testing_butler" in repo_list.repos
+
+def test_list_metric_tables(client: TestClient, test_butler):
+    repo = "testing_butler"
+    collection = "debug_collection_v2"
+    response = client.get(f"/api/v1/tables/tables/{repo}/{collection}")
+    table_list = TableList.model_validate(response.json())
+    assert "object_metrics_table" in table_list.tables
+
+def test_list_groups_in_table(client: TestClient, test_butler):
+    repo = "testing_butler"
+    collection = "debug_collection_v2"
+    response = client.get(f"/api/v1/tables/groups/object_metrics_table/{repo}/{collection}")
+    group_list = GroupList.model_validate(response.json())
+    assert "shapeSizeFractionalDiff" in group_list.groups
