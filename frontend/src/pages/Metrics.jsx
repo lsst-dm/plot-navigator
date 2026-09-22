@@ -16,7 +16,7 @@ const createColumnsFromRow = (row, groupPrefix, repo, collection) => {
 
     const link_to_dimension = (dimension, value) => {
       if(dimension == "tract") {
-        return <Link to={{pathname: `/tract/${repo}/${collection}/${value}`}}>{value}</Link>
+        return <Link to={{pathname: `/tract/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}/${value}`}}>{value}</Link>
       } else {
         return value
       }
