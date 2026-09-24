@@ -20,8 +20,10 @@ export default function Collection() {
     const [plotCounts, setPlotCounts] = useState({})
     const [tractCounts, setTractCounts] = useState({})
     const [visitCounts, setVisitCounts] = useState({})
+    const [metricTables, setMetricTables] = useState([])
 
-    useEffect(() => {apiFetch(`/api/v1/summaries/collection/${_repo}/${_collection}`)
+    useEffect(() => {
+        apiFetch(`/api/v1/summaries/collection/${_repo}/${_collection}`)
         .then(data => {
             setPlotCounts(data.plot_counts)
             setTractCounts(data.tract_counts)
@@ -29,7 +31,16 @@ export default function Collection() {
         })
         .catch((e) => {
             console.log(e);
-      })
+        })
+
+        apiFetch(`/api/v1/tables/tables/${_repo}/${_collection}`)
+        .then(data => {
+            setMetricTables(data.tables)
+        })
+        .catch((e) => {
+            console.log(e);
+        })
+
     }, [_repo, _collection])
 
     const plotNames = Object.keys(plotCounts).sort()
@@ -91,6 +102,27 @@ export default function Collection() {
                 </div>
     )
 
+    const metricTableList = (
+                <div className="">
+                    <div className="border-0 rounded mr-2 p-4 float-left">
+                        <table className="divide-y">
+                        <thead>
+                            <tr><td>Table</td></tr>
+                        </thead>
+                        <tbody>
+                        {metricTables.map((tableName, n) =>
+                            <tr key={n}>
+                                <td className="p-1"><Link to={`/metrics/${encodeURIComponent(repo)}/${encodeURIComponent(collection)}?t=${tableName}`}>{tableName}</Link></td>
+                            </tr>
+                        )}
+                        </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+    )
+
 
     return (
         <div>
@@ -107,6 +139,7 @@ export default function Collection() {
                 <TabNav panes={[
                     {title: "Select by Plot Name", content: selByPlotName},
                     {title: "Select by Data Id", content: selByDataId},
+                    {title: "Metrics", content: metricTableList},
                 ]} />
             </div>
 

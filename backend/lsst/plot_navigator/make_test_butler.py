@@ -48,6 +48,14 @@ def create_temp_butler(tracts: Iterable[int], repo_dir: Path) -> None:
         )
     )
 
+    butler.registry.registerDatasetType(
+        DatasetType(
+            "object_metrics_table",
+            butler.dimensions.conform(["skymap"]),
+            "ArrowAstropy",
+        )
+    )
+
     print(f"Created temporary Butler repo at: {repo_dir}")
 
 
@@ -135,7 +143,12 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
     collections = ["debug_collection",
                    "debug_collection_v2",
                    "debug_collection_v2_only",
+                   "big_debug_collection",
                    "LSSTCam/calib/DM-53399/3s_v1_dp2_gain_correction_20250720/gainCorrectionGen.20251124a/20251202T172458Z"]
+
+    # Create one collection with several hundred plots for testing (all the same plot PNG)
+    big_collection = "big_debug_collection"
+    assert big_collection in collections
 
     butler = Butler.from_config(repo_dir, writeable=True)
 
@@ -163,8 +176,16 @@ def make_test_butler(repo_dir: Path, repo_name: str) -> None:
             {"skymap": "test_skymap"}
         )
 
+        ingest_to_temp_butler(
+            butler,
+            "test_assets/object_metrics_table_lsst_cells_v2_LSSTCam_runs_DRP_DP2_v30_0_6_rc1_DM-53881_stage3_20260412T000817Z.parq",
+            "object_metrics_table",
+            collection,
+            {"skymap": "test_skymap"},
+        )
+
         # Create a very large number of one type of plot.
-        if collection == collections[0]:
+        if collection == big_collection:
             for tract in range(1462, 11400):
                 ingest_to_temp_butler(
                     butler,
