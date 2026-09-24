@@ -4,6 +4,8 @@ import { useParams, Link } from 'react-router'
 import { MetricTable } from '../components/metricTable'
 import { apiFetch } from '../wrappers'
 import { DropdownOptions } from '../components/dropdownOptions'
+import { useQueryParam } from '../components/pagerCommon'
+import { z } from 'zod';
 
 const numberFormat = Intl.NumberFormat("en-US", {minimumSignificantDigits: 1, maximumSignificantDigits: 3})
 
@@ -71,33 +73,44 @@ export default function Metrics() {
   const [data, setData] = useState([])
   const [columns, setColumns] = useState([])
   const [groups, setGroups] = useState([])
-  const [table, setTable] = useState("")
-  const [tableList, setTableList] = useState("")
-  const [selectedGroups, setSelectedGroups] = useState({})
+  const [table, setTable] = useQueryParam("t", "")
+  const [tableList, setTableList] = useState([])
 
-  useEffect(() => {apiFetch(`/api/v1/tables/groups/${table}/${_repo}/${_collection}`)
+  /* Accept either a list or a comma separated string that is turned into a list */
+  const [selectedGroups, setSelectedGroups] = useQueryParam("g", [],
+    z.string().transform((value) => value.split(',')))
+  /*
+  const [selectedGroups, setSelectedGroups] = useQueryParam("g", [],
+    z.union([z.string().transform((value) => value.split(',')), z.string().array()]))
+    */
+
+  useEffect(() => {
+    if(!table) { return }
+    apiFetch(`/api/v1/tables/groups/${table}/${_repo}/${_collection}`)
       .then(data => {
-          setGroups(data.groups);
+        setGroups(data.groups.filter((x) => !dimensions.includes(x)).sort());
       })
       .catch((e) => {
-          console.log(e);
+        console.log(e);
     })
   }, [table])
 
   useEffect(() => {
-    const groupString = Object.keys(selectedGroups).filter((key) => selectedGroups[key]).join(",")
+    console.log(`fetch data ${JSON.stringify(selectedGroups)} `)
+    const groupString = selectedGroups.join(",")
     apiFetch(`/api/v1/tables/data/${table}/${_repo}/${_collection}?group_names=${groupString}`)
-      .then(data => {
-          setData(data);
-          const groupPrefix = Object.keys(selectedGroups).filter((key) => selectedGroups[key])[0]
-          setColumns(createColumnsFromRow(Object.keys(data[0]), groupPrefix, repo, collection));
+      .then(newData => {
+          setData(newData);
+          const groupPrefix = selectedGroups[0]
+          setColumns(createColumnsFromRow(Object.keys(newData[0]), groupPrefix, repo, collection));
       })
       .catch((e) => {
           console.log(e);
     })
-  }, [selectedGroups])
+  }, [selectedGroups, table])
 
-  useEffect(() => {apiFetch(`/api/v1/tables/tables/${_repo}/${_collection}`)
+  useEffect(() => {
+    apiFetch(`/api/v1/tables/tables/${_repo}/${_collection}`)
       .then(data => {
           setTableList(data.tables)
       })
@@ -110,9 +123,9 @@ export default function Metrics() {
     return (
       <div>
         <div>
-          <div className="text-2xl p-2">{table}</div>
-          <DropdownOptions options={tableList} prefix={"Metric Table"} onChange={(selTable) => setTable(selTable)}/>
-          <DropdownOptions options={groups} prefix={"Metric Group"} onChange={(selGroup) => setSelectedGroups({[selGroup]: true})}/>
+          <div className="text-2xl p-2">{collection}</div>
+          <DropdownOptions options={tableList} prefix={"Metric Table"} selected={table} onChange={(selTable) => setTable(selTable)}/>
+          <DropdownOptions options={groups} prefix={"Metric Group"} selected={selectedGroups[0]} onChange={(selGroup) => setSelectedGroups([selGroup])}/>
         </div>
         <MetricTable data={data} columns={columns} />
       </div>
